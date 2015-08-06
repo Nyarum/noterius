@@ -8,4 +8,6 @@ This emulator based on:
 ### Installation
 
 - Run build docker command
-> Test
+```
+$ docker build -t noterius .
+```
