@@ -1,2 +1,8 @@
-# noterius
-New generation emulator for MMORPG Pirate King Online
+# Noterius - emulator for Pirate King Online
+
+This emulator based on:
+- PostgreSQL
+- Docker
+- fswatch
+
+
