@@ -5,4 +5,7 @@ This emulator based on:
 - Docker
 - fswatch
 
+### Installation
 
+- Run build docker command
+> Test
