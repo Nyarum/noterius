@@ -1,0 +1,14 @@
+{
+    "paths": [
+        "."
+    ],
+    "depth": 2,
+    "exclude": [],
+    "include": [
+        "\\.(go|py|php|java|cpp|h|rb)$"
+    ],
+    "command": "go run main.go",
+    "autorestart": true,
+    "restart-interval": 0,
+    "kill-signal": "KILL"
+}
