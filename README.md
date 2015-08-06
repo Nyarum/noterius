@@ -29,4 +29,4 @@ $ docker run -d -p 1973:1973 noterius fswatch
 
 ### Trailer for game
 
-[![Cool trailer for TOP ;)]http://img.youtube.com/vi/0l1TWRR5KuI/0.jpg(http://www.youtube.com/watch?v=0l1TWRR5KuI)
+[![Cool trailer for TOP ;)](http://img.youtube.com/vi/0l1TWRR5KuI/0.jpg)](http://www.youtube.com/watch?v=0l1TWRR5KuI)
