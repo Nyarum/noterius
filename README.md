@@ -1,7 +1,8 @@
 # Noterius - emulator for Pirate King Online
 
-   Next-gen version with new architecture.  
-   This emulator based on:  
+Next-gen version with new architecture.
+
+This emulator based on:
 - PostgreSQL
 - Docker
 - fswatch
