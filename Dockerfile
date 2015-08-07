@@ -8,3 +8,7 @@ ADD . /go/src/github.com/Nyarum/noterius
 
 RUN go get -u gopkg.in/yaml.v2
 RUN go get -u github.com/codeskyblue/fswatch
+
+EXPOSE 1973
+
+ENTRYPOINT ["fswatch"]
