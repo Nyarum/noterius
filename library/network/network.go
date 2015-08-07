@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
 )
 
 const (
@@ -60,9 +61,9 @@ func (p *Parser) Read(val interface{}) (err error) {
 		}
 
 		if p.Endian() == BigEndian {
-			(*valAun) = int(binary.BigEndian.Uint32(bufInt))
-		} else {
 			(*valAun) = int(binary.LittleEndian.Uint32(bufInt))
+		} else {
+			(*valAun) = int(binary.BigEndian.Uint32(bufInt))
 		}
 
 	case *int16:
@@ -86,9 +87,9 @@ func (p *Parser) Read(val interface{}) (err error) {
 		}
 
 		if p.Endian() == BigEndian {
-			(*valAun) = int32(binary.BigEndian.Uint32(bufInt32))
-		} else {
 			(*valAun) = int32(binary.LittleEndian.Uint32(bufInt32))
+		} else {
+			(*valAun) = int32(binary.BigEndian.Uint32(bufInt32))
 		}
 
 	case *int64:
@@ -124,6 +125,44 @@ func (p *Parser) Read(val interface{}) (err error) {
 		if valAun == nil {
 			err = errors.New("Uint64 value is nil")
 			return
+		}
+
+	case *float32:
+		valAun := val.(*float32)
+		if valAun == nil {
+			err = errors.New("Uint64 value is nil")
+			return
+		}
+
+		var bufFloat32 []byte
+		if bufFloat32 = p.buffer.Next(4); len(bufFloat32) < 4 {
+			err = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = math.Float32frombits(binary.BigEndian.Uint32(bufFloat32))
+		} else {
+			(*valAun) = math.Float32frombits(binary.LittleEndian.Uint32(bufFloat32))
+		}
+
+	case *float64:
+		valAun := val.(*float64)
+		if valAun == nil {
+			err = errors.New("Uint64 value is nil")
+			return
+		}
+
+		var bufFloat64 []byte
+		if bufFloat64 = p.buffer.Next(8); len(bufFloat64) < 4 {
+			err = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = math.Float64frombits(binary.BigEndian.Uint64(bufFloat64))
+		} else {
+			(*valAun) = math.Float64frombits(binary.LittleEndian.Uint64(bufFloat64))
 		}
 
 	}
@@ -270,6 +309,34 @@ func (p *Parser) Write(val interface{}) {
 			p.buffer.WriteByte(byte(valAun >> 8))
 			p.buffer.WriteByte(byte(valAun))
 		}
+
+	case float32:
+		valAun := val.(float32)
+
+		bitsFloat32 := math.Float32bits(valAun)
+		bufFloat32 := make([]byte, 4)
+
+		if p.Endian() == BigEndian {
+			binary.BigEndian.PutUint32(bufFloat32, bitsFloat32)
+		} else {
+			binary.LittleEndian.PutUint32(bufFloat32, bitsFloat32)
+		}
+
+		p.buffer.Write(bufFloat32)
+
+	case float64:
+		valAun := val.(float64)
+
+		bitsFloat64 := math.Float64bits(valAun)
+		bufFloat64 := make([]byte, 8)
+
+		if p.Endian() == BigEndian {
+			binary.BigEndian.PutUint64(bufFloat64, bitsFloat64)
+		} else {
+			binary.LittleEndian.PutUint64(bufFloat64, bitsFloat64)
+		}
+
+		p.buffer.Write(bufFloat64)
 
 	}
 }
