@@ -5,10 +5,10 @@
     "depth": 2,
     "exclude": [],
     "include": [
-        "\\.(go|py|php|java|cpp|h|rb)$"
+        "\\.(go|py|php|java|cpp|h|rb|js)$"
     ],
     "command": "go run main.go",
     "autorestart": true,
-    "restart-interval": 0,
+    "restart-interval": 5000000000,
     "kill-signal": "KILL"
 }
