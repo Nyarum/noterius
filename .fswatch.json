@@ -7,7 +7,7 @@
     "include": [
         "\\.(go|py|php|java|cpp|h|rb|js)$"
     ],
-    "command": "go run main.go",
+    "command": "go run -race main.go",
     "autorestart": true,
     "restart-interval": 5000000000,
     "kill-signal": "KILL"

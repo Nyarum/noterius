@@ -8,8 +8,9 @@ import (
 
 // Config struct for config file
 type Config struct {
-	IP   string `yaml:"IP"`
-	Port string `yaml:"Port"`
+	IP     string `yaml:"IP"`
+	Port   string `yaml:"Port"`
+	IsTest bool   `yaml:"IsTest"`
 }
 
 // LoadConfig function for load config

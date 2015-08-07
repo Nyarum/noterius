@@ -16,6 +16,8 @@ type (
 	Parser struct {
 		buffer *bytes.Buffer
 		endian int
+
+		Error error
 	}
 )
 
@@ -45,18 +47,20 @@ func (p *Parser) SetEndian(endian int) *Parser {
 	return p
 }
 
-func (p *Parser) Read(val interface{}) (err error) {
+func (p *Parser) Read(val interface{}) (pR *Parser) {
+	pR = p
+
 	switch val.(type) {
 	case *int:
 		valAun := val.(*int)
 		if valAun == nil {
-			err = errors.New("Int value is nil")
+			p.Error = errors.New("Int value is nil")
 			return
 		}
 
 		var bufInt []byte
 		if bufInt = p.buffer.Next(4); len(bufInt) < 4 {
-			err = errors.New("Not enough bytes in buffer")
+			p.Error = errors.New("Not enough bytes in buffer")
 			return
 		}
 
@@ -69,20 +73,20 @@ func (p *Parser) Read(val interface{}) (err error) {
 	case *int16:
 		valAun := val.(*int16)
 		if valAun == nil {
-			err = errors.New("Int16 value is nil")
+			p.Error = errors.New("Int16 value is nil")
 			return
 		}
 
 	case *int32:
 		valAun := val.(*int32)
 		if valAun == nil {
-			err = errors.New("Int32 value is nil")
+			p.Error = errors.New("Int32 value is nil")
 			return
 		}
 
 		var bufInt32 []byte
 		if bufInt32 = p.buffer.Next(4); len(bufInt32) < 4 {
-			err = errors.New("Not enough bytes in buffer")
+			p.Error = errors.New("Not enough bytes in buffer")
 			return
 		}
 
@@ -95,48 +99,48 @@ func (p *Parser) Read(val interface{}) (err error) {
 	case *int64:
 		valAun := val.(*int64)
 		if valAun == nil {
-			err = errors.New("Int64 value is nil")
+			p.Error = errors.New("Int64 value is nil")
 			return
 		}
 
 	case *uint:
 		valAun := val.(*uint)
 		if valAun == nil {
-			err = errors.New("Uint value is nil")
+			p.Error = errors.New("Uint value is nil")
 			return
 		}
 
 	case *uint16:
 		valAun := val.(*uint16)
 		if valAun == nil {
-			err = errors.New("Uint16 value is nil")
+			p.Error = errors.New("Uint16 value is nil")
 			return
 		}
 
 	case *uint32:
 		valAun := val.(*uint32)
 		if valAun == nil {
-			err = errors.New("Uint32 value is nil")
+			p.Error = errors.New("Uint32 value is nil")
 			return
 		}
 
 	case *uint64:
 		valAun := val.(*uint64)
 		if valAun == nil {
-			err = errors.New("Uint64 value is nil")
+			p.Error = errors.New("Uint64 value is nil")
 			return
 		}
 
 	case *float32:
 		valAun := val.(*float32)
 		if valAun == nil {
-			err = errors.New("Uint64 value is nil")
+			p.Error = errors.New("Uint64 value is nil")
 			return
 		}
 
 		var bufFloat32 []byte
 		if bufFloat32 = p.buffer.Next(4); len(bufFloat32) < 4 {
-			err = errors.New("Not enough bytes in buffer")
+			p.Error = errors.New("Not enough bytes in buffer")
 			return
 		}
 
@@ -149,13 +153,13 @@ func (p *Parser) Read(val interface{}) (err error) {
 	case *float64:
 		valAun := val.(*float64)
 		if valAun == nil {
-			err = errors.New("Uint64 value is nil")
+			p.Error = errors.New("Uint64 value is nil")
 			return
 		}
 
 		var bufFloat64 []byte
 		if bufFloat64 = p.buffer.Next(8); len(bufFloat64) < 4 {
-			err = errors.New("Not enough bytes in buffer")
+			p.Error = errors.New("Not enough bytes in buffer")
 			return
 		}
 
@@ -165,12 +169,16 @@ func (p *Parser) Read(val interface{}) (err error) {
 			(*valAun) = math.Float64frombits(binary.LittleEndian.Uint64(bufFloat64))
 		}
 
+	default:
+		p.Error = errors.New("Assigned type is not supported")
 	}
 
 	return
 }
 
-func (p *Parser) Write(val interface{}) {
+func (p *Parser) Write(val interface{}) (pR *Parser) {
+	pR = p
+
 	switch val.(type) {
 	case int:
 		valAun := val.(int)
@@ -338,5 +346,9 @@ func (p *Parser) Write(val interface{}) {
 
 		p.buffer.Write(bufFloat64)
 
+	default:
+		p.Error = errors.New("Assigned type is not supported")
 	}
+
+	return
 }

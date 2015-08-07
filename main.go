@@ -13,6 +13,7 @@ func main() {
 	flag.Parse()
 
 	app := land.Application{}
+	app.ErrorHandler = core.LoadErrorHandler()
 
 	if err := core.LoadConfig(&app.Config, *configPathFlag); err != nil {
 		log.Fatalln("Config is not load, err - ", err)
