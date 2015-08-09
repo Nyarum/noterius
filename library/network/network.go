@@ -124,6 +124,18 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
+		var bufUint32 []byte
+		if bufUint32 = p.buffer.Next(4); len(bufUint32) < 4 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = binary.LittleEndian.Uint32(bufUint32)
+		} else {
+			(*valAun) = binary.BigEndian.Uint32(bufUint32)
+		}
+
 	case *uint64:
 		valAun := val.(*uint64)
 		if valAun == nil {
@@ -183,17 +195,21 @@ func (p *Parser) Write(val interface{}) (pR *Parser) {
 	case int:
 		valAun := val.(int)
 
+		buf := make([]byte, 4)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 24))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
+			buf[2] = byte(valAun >> 16)
+			buf[3] = byte(valAun >> 24)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 24)
+			buf[1] = byte(valAun >> 16)
+			buf[2] = byte(valAun >> 8)
+			buf[3] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case int8:
 		valAun := val.(int8)
@@ -203,66 +219,81 @@ func (p *Parser) Write(val interface{}) (pR *Parser) {
 	case int16:
 		valAun := val.(int16)
 
+		buf := make([]byte, 2)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 8)
+			buf[1] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case int32:
 		valAun := val.(int32)
+		buf := make([]byte, 4)
 
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 24))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
+			buf[2] = byte(valAun >> 16)
+			buf[3] = byte(valAun >> 24)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 24)
+			buf[1] = byte(valAun >> 16)
+			buf[2] = byte(valAun >> 8)
+			buf[3] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case int64:
 		valAun := val.(int64)
 
+		buf := make([]byte, 8)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 32))
-			p.buffer.WriteByte(byte(valAun >> 40))
-			p.buffer.WriteByte(byte(valAun >> 48))
-			p.buffer.WriteByte(byte(valAun >> 56))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
+			buf[2] = byte(valAun >> 16)
+			buf[3] = byte(valAun >> 24)
+			buf[4] = byte(valAun >> 32)
+			buf[5] = byte(valAun >> 40)
+			buf[6] = byte(valAun >> 48)
+			buf[7] = byte(valAun >> 56)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 56))
-			p.buffer.WriteByte(byte(valAun >> 48))
-			p.buffer.WriteByte(byte(valAun >> 40))
-			p.buffer.WriteByte(byte(valAun >> 32))
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 56)
+			buf[1] = byte(valAun >> 48)
+			buf[2] = byte(valAun >> 40)
+			buf[3] = byte(valAun >> 32)
+			buf[4] = byte(valAun >> 24)
+			buf[5] = byte(valAun >> 16)
+			buf[6] = byte(valAun >> 8)
+			buf[7] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case uint:
 		valAun := val.(uint)
 
+		buf := make([]byte, 4)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 24))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
+			buf[2] = byte(valAun >> 16)
+			buf[3] = byte(valAun >> 24)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 24)
+			buf[1] = byte(valAun >> 16)
+			buf[2] = byte(valAun >> 8)
+			buf[3] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case uint8:
 		valAun := val.(uint8)
@@ -272,51 +303,63 @@ func (p *Parser) Write(val interface{}) (pR *Parser) {
 	case uint16:
 		valAun := val.(uint16)
 
+		buf := make([]byte, 2)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 8)
+			buf[1] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case uint32:
 		valAun := val.(uint32)
 
+		buf := make([]byte, 4)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 24))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
+			buf[2] = byte(valAun >> 16)
+			buf[3] = byte(valAun >> 24)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 24)
+			buf[1] = byte(valAun >> 16)
+			buf[2] = byte(valAun >> 8)
+			buf[3] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case uint64:
 		valAun := val.(uint64)
 
+		buf := make([]byte, 8)
+
 		if p.Endian() == BigEndian {
-			p.buffer.WriteByte(byte(valAun))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 32))
-			p.buffer.WriteByte(byte(valAun >> 40))
-			p.buffer.WriteByte(byte(valAun >> 48))
-			p.buffer.WriteByte(byte(valAun >> 56))
+			buf[0] = byte(valAun)
+			buf[1] = byte(valAun >> 8)
+			buf[2] = byte(valAun >> 16)
+			buf[3] = byte(valAun >> 24)
+			buf[4] = byte(valAun >> 32)
+			buf[5] = byte(valAun >> 40)
+			buf[6] = byte(valAun >> 48)
+			buf[7] = byte(valAun >> 56)
 		} else {
-			p.buffer.WriteByte(byte(valAun >> 56))
-			p.buffer.WriteByte(byte(valAun >> 48))
-			p.buffer.WriteByte(byte(valAun >> 40))
-			p.buffer.WriteByte(byte(valAun >> 32))
-			p.buffer.WriteByte(byte(valAun >> 24))
-			p.buffer.WriteByte(byte(valAun >> 16))
-			p.buffer.WriteByte(byte(valAun >> 8))
-			p.buffer.WriteByte(byte(valAun))
+			buf[0] = byte(valAun >> 56)
+			buf[1] = byte(valAun >> 48)
+			buf[2] = byte(valAun >> 40)
+			buf[3] = byte(valAun >> 32)
+			buf[4] = byte(valAun >> 24)
+			buf[5] = byte(valAun >> 16)
+			buf[6] = byte(valAun >> 8)
+			buf[7] = byte(valAun)
 		}
+
+		p.buffer.Write(buf)
 
 	case float32:
 		valAun := val.(float32)
