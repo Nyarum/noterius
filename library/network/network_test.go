@@ -54,10 +54,11 @@ func BenchmarkReadToStruct(b *testing.B) {
 			Id    int32
 			Level uint32
 			HP    uint32
+			Name  string
 		}
 
-		netes := NewParser([]byte{0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04})
-		netes.Read(&TestStruct.Id).Read(&TestStruct.Level).Read(&TestStruct.HP)
+		netes := NewParser([]byte{0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x07, 0x4e, 0x79, 0x61, 0x72, 0x75, 0x6d, 0x00})
+		netes.Read(&TestStruct.Id).Read(&TestStruct.Level).Read(&TestStruct.HP).Read(&TestStruct.Name)
 	}
 }
 
@@ -67,11 +68,12 @@ func BenchmarkWriteFromStruct(b *testing.B) {
 			Id    int32
 			Level int32
 			HP    int32
+			Name  string
 		}{
-			2, 3, 4,
+			2, 3, 4, "Nyarum",
 		}
 
 		netes := NewParser([]byte{})
-		netes.Write(TestStruct.Id).Write(TestStruct.Level).Write(TestStruct.HP)
+		netes.Write(TestStruct.Id).Write(TestStruct.Level).Write(TestStruct.HP).Write(TestStruct.Name)
 	}
 }

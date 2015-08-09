@@ -84,9 +84,9 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 		}
 
 		if p.Endian() == BigEndian {
-			(*valAun) = int8(binary.LittleEndian.Uint32(bufInt8))
+			(*valAun) = int8(binary.LittleEndian.Uint16(bufInt8))
 		} else {
-			(*valAun) = int8(binary.BigEndian.Uint32(bufInt8))
+			(*valAun) = int8(binary.BigEndian.Uint16(bufInt8))
 		}
 
 	case *int16:
@@ -103,9 +103,9 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 		}
 
 		if p.Endian() == BigEndian {
-			(*valAun) = int16(binary.LittleEndian.Uint32(bufInt16))
+			(*valAun) = int16(binary.LittleEndian.Uint16(bufInt16))
 		} else {
-			(*valAun) = int16(binary.BigEndian.Uint32(bufInt16))
+			(*valAun) = int16(binary.BigEndian.Uint16(bufInt16))
 		}
 
 	case *int32:
@@ -167,9 +167,9 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 		}
 
 		if p.Endian() == BigEndian {
-			(*valAun) = uint8(binary.LittleEndian.Uint32(bufUint8))
+			(*valAun) = uint8(binary.LittleEndian.Uint16(bufUint8))
 		} else {
-			(*valAun) = uint8(binary.BigEndian.Uint32(bufUint8))
+			(*valAun) = uint8(binary.BigEndian.Uint16(bufUint8))
 		}
 
 	case *uint16:
@@ -186,9 +186,9 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 		}
 
 		if p.Endian() == BigEndian {
-			(*valAun) = uint16(binary.LittleEndian.Uint32(bufUint16))
+			(*valAun) = binary.LittleEndian.Uint16(bufUint16)
 		} else {
-			(*valAun) = uint16(binary.BigEndian.Uint32(bufUint16))
+			(*valAun) = binary.BigEndian.Uint16(bufUint16)
 		}
 
 	case *uint32:
@@ -236,7 +236,7 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		var bufFloat32 []byte
+		bufFloat32 := make([]byte, 4)
 		if bufFloat32 = p.buffer.Next(4); len(bufFloat32) < 4 {
 			p.Error = errors.New("Not enough bytes in buffer")
 			return
@@ -255,8 +255,8 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		var bufFloat64 []byte
-		if bufFloat64 = p.buffer.Next(8); len(bufFloat64) < 4 {
+		bufFloat64 := make([]byte, 8)
+		if bufFloat64 = p.buffer.Next(8); len(bufFloat64) < 8 {
 			p.Error = errors.New("Not enough bytes in buffer")
 			return
 		}
@@ -266,6 +266,34 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 		} else {
 			(*valAun) = math.Float64frombits(binary.LittleEndian.Uint64(bufFloat64))
 		}
+
+	case *string:
+		valAun := val.(*string)
+		if valAun == nil {
+			p.Error = errors.New("String value is nil")
+			return
+		}
+
+		var lnString uint16
+		bufLenString := make([]byte, 2)
+		if bufLenString = p.buffer.Next(2); len(bufLenString) < 2 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			lnString = binary.LittleEndian.Uint16(bufLenString)
+		} else {
+			lnString = binary.BigEndian.Uint16(bufLenString)
+		}
+
+		bufString := make([]byte, lnString)
+		if bufString = p.buffer.Next(int(lnString)); len(bufString) < int(lnString) {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		(*valAun) = string(bufString)
 
 	default:
 		p.Error = errors.New("Assigned type is not supported")
@@ -474,6 +502,28 @@ func (p *Parser) Write(val interface{}) (pR *Parser) {
 		}
 
 		p.buffer.Write(bufFloat64)
+
+	case string:
+		valAun := val.(string)
+		valAun += string([]byte{0x00})
+
+		// Write len header for string, 2 bytes
+		ln := len(valAun)
+
+		buf := make([]byte, 2)
+
+		if p.Endian() == BigEndian {
+			buf[0] = byte(ln)
+			buf[1] = byte(ln >> 8)
+		} else {
+			buf[0] = byte(ln >> 8)
+			buf[1] = byte(ln)
+		}
+
+		p.buffer.Write(buf)
+
+		// Write string
+		p.buffer.WriteString(valAun)
 
 	default:
 		p.Error = errors.New("Assigned type is not supported")
