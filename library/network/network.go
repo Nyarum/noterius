@@ -83,11 +83,7 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		if p.Endian() == BigEndian {
-			(*valAun) = int8(binary.LittleEndian.Uint16(bufInt8))
-		} else {
-			(*valAun) = int8(binary.BigEndian.Uint16(bufInt8))
-		}
+		(*valAun) = int8(bufInt8[0])
 
 	case *int16:
 		valAun := val.(*int16)
@@ -166,11 +162,7 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		if p.Endian() == BigEndian {
-			(*valAun) = uint8(binary.LittleEndian.Uint16(bufUint8))
-		} else {
-			(*valAun) = uint8(binary.BigEndian.Uint16(bufUint8))
-		}
+		(*valAun) = uint8(bufUint8[0])
 
 	case *uint16:
 		valAun := val.(*uint16)
