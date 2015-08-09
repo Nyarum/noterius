@@ -58,7 +58,7 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		var bufInt []byte
+		bufInt := make([]byte, 4)
 		if bufInt = p.buffer.Next(4); len(bufInt) < 4 {
 			p.Error = errors.New("Not enough bytes in buffer")
 			return
@@ -70,11 +70,42 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			(*valAun) = int(binary.BigEndian.Uint32(bufInt))
 		}
 
+	case *int8:
+		valAun := val.(*int8)
+		if valAun == nil {
+			p.Error = errors.New("Int8 value is nil")
+			return
+		}
+
+		bufInt8 := make([]byte, 1)
+		if bufInt8 = p.buffer.Next(1); len(bufInt8) < 1 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = int8(binary.LittleEndian.Uint32(bufInt8))
+		} else {
+			(*valAun) = int8(binary.BigEndian.Uint32(bufInt8))
+		}
+
 	case *int16:
 		valAun := val.(*int16)
 		if valAun == nil {
 			p.Error = errors.New("Int16 value is nil")
 			return
+		}
+
+		bufInt16 := make([]byte, 2)
+		if bufInt16 = p.buffer.Next(2); len(bufInt16) < 2 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = int16(binary.LittleEndian.Uint32(bufInt16))
+		} else {
+			(*valAun) = int16(binary.BigEndian.Uint32(bufInt16))
 		}
 
 	case *int32:
@@ -84,7 +115,7 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		var bufInt32 []byte
+		bufInt32 := make([]byte, 4)
 		if bufInt32 = p.buffer.Next(4); len(bufInt32) < 4 {
 			p.Error = errors.New("Not enough bytes in buffer")
 			return
@@ -110,11 +141,54 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
+		bufUint := make([]byte, 4)
+		if bufUint = p.buffer.Next(4); len(bufUint) < 4 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = uint(binary.LittleEndian.Uint32(bufUint))
+		} else {
+			(*valAun) = uint(binary.BigEndian.Uint32(bufUint))
+		}
+
+	case *uint8:
+		valAun := val.(*uint8)
+		if valAun == nil {
+			p.Error = errors.New("Uint8 value is nil")
+			return
+		}
+
+		bufUint8 := make([]byte, 1)
+		if bufUint8 = p.buffer.Next(1); len(bufUint8) < 1 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = uint8(binary.LittleEndian.Uint32(bufUint8))
+		} else {
+			(*valAun) = uint8(binary.BigEndian.Uint32(bufUint8))
+		}
+
 	case *uint16:
 		valAun := val.(*uint16)
 		if valAun == nil {
 			p.Error = errors.New("Uint16 value is nil")
 			return
+		}
+
+		bufUint16 := make([]byte, 2)
+		if bufUint16 = p.buffer.Next(2); len(bufUint16) < 2 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = uint16(binary.LittleEndian.Uint32(bufUint16))
+		} else {
+			(*valAun) = uint16(binary.BigEndian.Uint32(bufUint16))
 		}
 
 	case *uint32:
@@ -124,7 +198,7 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 			return
 		}
 
-		var bufUint32 []byte
+		bufUint32 := make([]byte, 4)
 		if bufUint32 = p.buffer.Next(4); len(bufUint32) < 4 {
 			p.Error = errors.New("Not enough bytes in buffer")
 			return
@@ -141,6 +215,18 @@ func (p *Parser) Read(val interface{}) (pR *Parser) {
 		if valAun == nil {
 			p.Error = errors.New("Uint64 value is nil")
 			return
+		}
+
+		bufUint64 := make([]byte, 8)
+		if bufUint64 = p.buffer.Next(8); len(bufUint64) < 8 {
+			p.Error = errors.New("Not enough bytes in buffer")
+			return
+		}
+
+		if p.Endian() == BigEndian {
+			(*valAun) = binary.LittleEndian.Uint64(bufUint64)
+		} else {
+			(*valAun) = binary.BigEndian.Uint64(bufUint64)
 		}
 
 	case *float32:
