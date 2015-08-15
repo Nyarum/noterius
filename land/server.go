@@ -38,6 +38,7 @@ func (a *Application) Run() (err error) {
 				bytesAlloc      []byte      = make([]byte, conf.Option.LenBuffer)
 				readBytesSocket chan string = make(chan string)
 			)
+			defer close(readBytesSocket)
 
 			go ClientLive(c, readBytesSocket, conf)
 
