@@ -2,7 +2,10 @@ package land
 
 import (
 	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/library/network"
+	"time"
 
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -40,6 +43,21 @@ func (a *Application) Run() (err error) {
 			)
 
 			go ClientLive(c, readBytesSocket, conf)
+
+			// First packet for client init connect with date
+			current := time.Now()
+			date := fmt.Sprintf("[%d-%d %d:%d:%d:%d]", current.Month(), current.Day(), current.Hour(), current.Minute(), current.Second(), current.Nanosecond()/1000000)
+			ln := uint16(11 + len(date))
+			group := []byte{0x80, 0x00, 0x00, 0x00}
+			opcode := uint16(940)
+
+			netes := network.NewParser([]byte{})
+			netes.Write(ln)
+			netes.SetEndian(network.BigEndian).Write(group)
+			netes.SetEndian(network.LittleEndian).Write(opcode)
+			netes.SetEndian(network.LittleEndian).Write(date)
+
+			c.Write(netes.Bytes())
 
 			for {
 				if _, err := c.Read(bytesAlloc); err == io.EOF {

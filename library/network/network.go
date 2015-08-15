@@ -517,6 +517,11 @@ func (p *Parser) Write(val interface{}) (pR *Parser) {
 		// Write string
 		p.buffer.WriteString(valAun)
 
+	case []byte:
+		valAun := val.([]byte)
+
+		p.buffer.Write(valAun)
+
 	default:
 		p.Error = errors.New("Assigned type is not supported")
 	}

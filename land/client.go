@@ -21,7 +21,7 @@ func ClientLive(c net.Conn, chReadBytes chan string, conf core.Config) {
 		if conf.Base.Test {
 			panic("Client is break :D")
 		} else {
-			log.Printf("Print message from client: %v", string(buffer.Bytes()))
+			log.Printf("Print message from client: % x", buffer.Bytes())
 		}
 	}
 }
