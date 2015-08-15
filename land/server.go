@@ -45,7 +45,7 @@ func (a *Application) Run() (err error) {
 				if _, err := c.Read(bytesAlloc); err == io.EOF {
 					log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
 					break
-				} else {
+				} else if err != nil {
 					log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
 				}
 
