@@ -10,12 +10,13 @@ import (
 // Application struct for project and his variables
 type Application struct {
 	Config       core.Config
+	Database     core.Database
 	ErrorHandler func(c net.Conn)
 }
 
 // Run function for starting server
 func (a *Application) Run() (err error) {
-	listen, err := net.Listen("tcp", a.Config.IP+":"+a.Config.Port)
+	listen, err := net.Listen("tcp", a.Config.Base.IP+":"+a.Config.Base.Port)
 	if err != nil {
 		return
 	}
@@ -40,6 +41,6 @@ func (a *Application) Run() (err error) {
 					break
 				}
 			}
-		}(client, a.Config.IsTest)
+		}(client, a.Config.Base.Test)
 	}
 }

@@ -5,7 +5,7 @@
     "depth": 2,
     "exclude": [],
     "include": [
-        "\\.(go|py|php|java|cpp|h|rb|js)$"
+        "\\.(go|py|php|java|cpp|h|rb|js|json|yaml)$"
     ],
     "command": "go run -race main.go",
     "autorestart": true,

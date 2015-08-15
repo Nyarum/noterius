@@ -15,11 +15,17 @@ func main() {
 	app := land.Application{}
 	app.ErrorHandler = core.LoadErrorHandler()
 
+	log.Println("Loading config..")
 	if err := core.LoadConfig(&app.Config, *configPathFlag); err != nil {
 		log.Fatalln("Config is not load, err - ", err)
 	}
 
-	log.Printf("Server starting on %v address\n", app.Config.IP+":"+app.Config.Port)
+	log.Println("Loading database..")
+	if err := core.LoadDatabase(&app.Database, app.Config.Database.Path); err != nil {
+		log.Fatalln("Database is not load, err - ", err)
+	}
+
+	log.Printf("Server starting on %v address\n", app.Config.Base.IP+":"+app.Config.Base.Port)
 	if err := app.Run(); err != nil {
 		log.Fatalln("Server is not started, err - ", err)
 	}

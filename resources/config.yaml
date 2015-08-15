@@ -1,3 +1,7 @@
-IP: 0.0.0.0
-Port: 1973
-IsTest: true
+base:
+    ip: 0.0.0.0
+    port: 1973
+    debug: false
+    test: true
+database: # NoSQL LevelDB written on Go
+    path: ../resources/database.db
