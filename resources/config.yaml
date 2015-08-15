@@ -2,6 +2,10 @@ base:
     ip: 0.0.0.0
     port: 1973
     debug: false
-    test: true
+    test: false
+
+option:
+    lenBuffer: 16384
+
 database: # NoSQL LevelDB written on Go
     path: ../resources/database.db

@@ -14,6 +14,11 @@ type Config struct {
 		Debug bool   `yaml:"debug"`
 		Test  bool   `yaml:"test"`
 	} `yaml:"base"`
+
+	Option struct {
+		LenBuffer int `yaml:"lenBuffer"`
+	} `yaml:"option"`
+
 	Database struct {
 		Path string `yaml:"path"`
 	} `yaml:"database"`

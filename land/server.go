@@ -28,19 +28,27 @@ func (a *Application) Run() (err error) {
 			continue
 		}
 
-		go func(c net.Conn, test bool) {
+		go func(c net.Conn, conf core.Config) {
 			defer a.ErrorHandler(c)
 
 			log.Println("Client is connected:", c.RemoteAddr())
 
+			var (
+				bytesAlloc      []byte      = make([]byte, conf.Option.LenBuffer)
+				readBytesSocket chan string = make(chan string)
+			)
+
+			go ClientLive(c, readBytesSocket, conf)
+
 			for {
-				if test {
-					panic("Client is break :D")
-				} else {
-					log.Println("Work is good")
+				_, err := c.Read(bytesAlloc)
+				if err != nil {
+					log.Printf("Client [%v] is disconnect after read packet error, err - %v", c.RemoteAddr(), err)
 					break
 				}
+
+				readBytesSocket <- string(bytesAlloc)
 			}
-		}(client, a.Config.Base.Test)
+		}(client, a.Config)
 	}
 }
