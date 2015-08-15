@@ -15,8 +15,7 @@ func ClientLive(c net.Conn, chReadBytes chan string, conf core.Config) {
 		buffer     *bytes.Buffer = bytes.NewBuffer(bytesAlloc)
 	)
 
-	for {
-		getBytes = <-chReadBytes
+	for getBytes = range chReadBytes {
 		copy(bytesAlloc, getBytes)
 
 		if conf.Base.Test {

@@ -3,6 +3,7 @@ package land
 import (
 	"github.com/Nyarum/noterius/core"
 
+	"io"
 	"log"
 	"net"
 )
@@ -41,10 +42,11 @@ func (a *Application) Run() (err error) {
 			go ClientLive(c, readBytesSocket, conf)
 
 			for {
-				_, err := c.Read(bytesAlloc)
-				if err != nil {
-					log.Printf("Client [%v] is disconnect after read packet error, err - %v", c.RemoteAddr(), err)
+				if _, err := c.Read(bytesAlloc); err == io.EOF {
+					log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
 					break
+				} else {
+					log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
 				}
 
 				readBytesSocket <- string(bytesAlloc)
