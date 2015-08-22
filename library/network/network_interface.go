@@ -4,6 +4,7 @@ import (
 	"bytes"
 )
 
+// Netes interface for network library
 type Netes interface {
 	Buffer() *bytes.Buffer
 	Bytes() []byte

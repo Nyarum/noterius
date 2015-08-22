@@ -10,11 +10,13 @@ import (
 	"net"
 )
 
+// Buffers struct for read and write channels
 type Buffers struct {
 	WriteChannel chan string
 	ReadChannel  chan string
 }
 
+// NewBuffers method for init Buffers struct
 func NewBuffers() *Buffers {
 	return &Buffers{
 		WriteChannel: make(chan string),
@@ -22,22 +24,24 @@ func NewBuffers() *Buffers {
 	}
 }
 
+// GetWriteChannel method for get WriteChannel from Buffers struct
 func (b *Buffers) GetWriteChannel() chan string {
 	return b.WriteChannel
 }
 
+// GetReadChannel method for get ReadChannel from Buffers struct
 func (b *Buffers) GetReadChannel() chan string {
 	return b.ReadChannel
 }
 
-// WriteHandler function for write bytes to socket in loop from channel
+// WriteHandler method for write bytes to socket in loop from channel
 func (b *Buffers) WriteHandler(c net.Conn) {
 	for v := range b.WriteChannel {
 		c.Write([]byte(v))
 	}
 }
 
-// ReadHandler function for read bytes from socket in loop to channel
+// ReadHandler method for read bytes from socket in loop to channel
 func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 	var (
 		bytesAlloc []byte = make([]byte, conf.Option.LenBuffer)

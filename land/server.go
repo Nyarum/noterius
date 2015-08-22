@@ -31,7 +31,7 @@ type Application struct {
 	ErrorHandler func(c net.Conn)
 }
 
-// Run function for starting server
+// Run method for starting server
 func (a *Application) Run() (err error) {
 	listen, err := net.Listen("tcp", a.Config.Base.IP+":"+a.Config.Base.Port)
 	if err != nil {

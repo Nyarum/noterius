@@ -13,6 +13,7 @@ const (
 )
 
 type (
+	// Parser struct for network library
 	Parser struct {
 		buffer *bytes.Buffer
 		endian int
@@ -21,6 +22,7 @@ type (
 	}
 )
 
+// NewParser method for init Parser struct
 func NewParser(buf []byte) *Parser {
 	parser := new(Parser)
 	parser.buffer = bytes.NewBuffer(buf)
@@ -29,18 +31,22 @@ func NewParser(buf []byte) *Parser {
 	return parser
 }
 
+// Buffer method for get pointer to bytes.Buffer
 func (p *Parser) Buffer() *bytes.Buffer {
 	return p.buffer
 }
 
+// Bytes method for get []byte from buffer
 func (p *Parser) Bytes() []byte {
 	return p.buffer.Bytes()
 }
 
+// Endian method for get current endian number
 func (p *Parser) Endian() int {
 	return p.endian
 }
 
+// SetEndian method for set endian in buffer
 func (p *Parser) SetEndian(endian int) *Parser {
 	p.endian = endian
 

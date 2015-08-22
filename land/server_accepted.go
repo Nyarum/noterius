@@ -7,6 +7,7 @@ import (
 	"log"
 )
 
+// ClientLive method for accept new connection from socket
 func ClientLive(buffers Buffers, conf core.Config) {
 	var (
 		bytesAlloc []byte        = make([]byte, conf.Option.LenBuffer)
