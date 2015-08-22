@@ -47,9 +47,11 @@ func (a *Application) Run() (err error) {
 
 		go func(c net.Conn, conf core.Config) {
 			var buffers *Buffers = NewBuffers()
-			defer a.ErrorHandler(c)
-			defer close(buffers.GetReadChannel())
-			defer close(buffers.GetWriteChannel())
+			defer func() {
+				close(buffers.GetReadChannel())
+				close(buffers.GetWriteChannel())
+				a.ErrorHandler(c)
+			}()
 
 			log.Println("Client is connected:", c.RemoteAddr())
 
