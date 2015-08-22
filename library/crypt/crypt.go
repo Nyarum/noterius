@@ -1,4 +1,4 @@
-package pills
+package crypt
 
 import (
 	"crypto/cipher"

@@ -41,6 +41,11 @@ func (p *Parser) Bytes() []byte {
 	return p.buffer.Bytes()
 }
 
+// Bytes method for reset buffer
+func (p *Parser) Reset() {
+	p.buffer.Reset()
+}
+
 // Endian method for get current endian number
 func (p *Parser) Endian() int {
 	return p.endian
@@ -438,6 +443,6 @@ func (p *Parser) WriteBytes(value []byte) *Parser {
 	return p
 }
 
-func (p *Parser) WriteBool() *Parser {
+func (p *Parser) WriteBool(value bool) *Parser {
 	return p
 }

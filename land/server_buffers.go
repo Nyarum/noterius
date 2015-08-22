@@ -2,6 +2,7 @@ package land
 
 import (
 	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/pills"
 
 	"bytes"
 	"encoding/binary"
@@ -36,6 +37,10 @@ func (b *Buffers) GetReadChannel() chan string {
 
 // WriteHandler method for write bytes to socket in loop from channel
 func (b *Buffers) WriteHandler(c net.Conn) {
+	// Write one packet for client with time.Now()
+	pill := pills.NewPill()
+	c.Write(pill.Encrypt(pill.SetOpcode(940).GetOutcomingCrumb()))
+
 	for v := range b.WriteChannel {
 		c.Write([]byte(v))
 	}
@@ -57,7 +62,7 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 			log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
 		}
 
-		lenFromData := int(binary.LittleEndian.Uint16(buf.Bytes()[0:2]))
+		lenFromData := int(binary.BigEndian.Uint16(buf.Bytes()[0:2]))
 		if buf.Len() < lenFromData {
 			continue
 		}

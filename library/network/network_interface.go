@@ -8,6 +8,7 @@ import (
 type Netes interface {
 	Buffer() *bytes.Buffer
 	Bytes() []byte
+	Reset()
 	Endian() int
 	SetEndian(int) *Parser
 
