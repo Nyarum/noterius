@@ -24,7 +24,7 @@ type Config struct {
 	} `yaml:"database"`
 }
 
-// LoadConfig function for load config
+// LoadConfig method for load config
 func LoadConfig(config *Config, path string) (err error) {
 	configFile, err := ioutil.ReadFile(path)
 	if err != nil {

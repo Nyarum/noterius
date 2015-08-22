@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 )
 
+// LoadErrorHandler method for handler client accepted
 func LoadErrorHandler() func(c net.Conn) {
 	return func(c net.Conn) {
 		if r := recover(); r != nil {
