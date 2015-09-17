@@ -2,6 +2,8 @@
 
 Next-gen version with new architecture.
 
+Version: 0.1.2
+
 This emulator based on:
 - PostgreSQL
 - Docker
