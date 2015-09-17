@@ -7,7 +7,7 @@ This emulator based on:
 - Docker
 - fswatch
 
-### Installation
+### Installation from latest sources
 
 - Download project
 ```
@@ -22,6 +22,18 @@ $ cd $GOPATH/src/github.com/Nyarum/noterius
 - Run build docker image
 ```
 $ docker build -t nyarum/noterius .
+```
+
+- Start project in docker
+```
+$ docker run -d -p 1973:1973 nyarum/noterius
+```
+
+### Installation from stable release
+
+- Pull docker image
+```
+$ docker pull nyarum/noterius
 ```
 
 - Start project in docker
