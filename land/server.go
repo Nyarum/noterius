@@ -5,6 +5,7 @@ import (
 
 	"log"
 	"net"
+	"time"
 )
 
 // Application struct for project and his variables
@@ -23,6 +24,7 @@ func (a *Application) Run() (err error) {
 
 	for {
 		client, err := listen.Accept()
+		client.SetReadDeadline(time.Now().Add(10 * time.Second))
 		if err != nil {
 			log.Println(err)
 			continue

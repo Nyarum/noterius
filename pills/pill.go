@@ -47,10 +47,9 @@ func (p *Pill) Encrypt(pe interfaces.PillEncoder) []byte {
 
 	header := Header{Len: uint16(len(data) + 8), UniqueId: 128, Opcode: uint16(p.opcode)}
 
-	netes.SetEndian(network.LittleEndian)
-	netes.WriteUint16(header.Len)
-	netes.WriteUint32(header.UniqueId)
-	netes.WriteUint16(header.Opcode)
+	netes.SetEndian(network.LittleEndian).WriteUint16(header.Len)
+	netes.SetEndian(network.BigEndian).WriteUint32(header.UniqueId)
+	netes.SetEndian(network.LittleEndian).WriteUint16(header.Opcode)
 	netes.WriteBytes([]byte(data))
 
 	return netes.Bytes()
@@ -62,9 +61,9 @@ func (p *Pill) Decrypt(buf []byte) int {
 		netes  *network.Parser = network.NewParser(buf)
 	)
 
-	netes.ReadUint16(&header.Len)
-	netes.ReadUint32(&header.UniqueId)
-	netes.ReadUint16(&header.Opcode)
+	netes.SetEndian(network.LittleEndian).ReadUint16(&header.Len)
+	netes.SetEndian(network.BigEndian).ReadUint32(&header.UniqueId)
+	netes.SetEndian(network.LittleEndian).ReadUint16(&header.Opcode)
 
 	return p.SetOpcode(int(header.Opcode)).GetIncomingCrumb().PreHandler(netes).Process()
 }

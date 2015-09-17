@@ -59,13 +59,20 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 			log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
 			return
 		} else if err != nil {
+			if err.(net.Error).Timeout() {
+				log.Printf("Client [%v] is timeout\n", c.RemoteAddr())
+				return
+			}
+
 			log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
 		}
 
 		var lastGotLen int
 		readLen := func() bool {
 			lastGotLen = int(binary.BigEndian.Uint16(buf.Bytes()[0:2]))
-			if buf.Len() < lastGotLen {
+			if lastGotLen == 0 {
+				return false
+			} else if buf.Len() < lastGotLen {
 				return false
 			}
 
