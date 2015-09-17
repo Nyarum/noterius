@@ -9,9 +9,9 @@ import (
 
 // Application struct for project and his variables
 type Application struct {
-	Config       core.Config
-	Database     core.Database
-	ErrorHandler func(c net.Conn)
+	Config   core.Config
+	Database core.Database
+	Error    *core.Error
 }
 
 // Run method for starting server
@@ -33,7 +33,7 @@ func (a *Application) Run() (err error) {
 			defer func() {
 				close(buffers.GetReadChannel())
 				close(buffers.GetWriteChannel())
-				a.ErrorHandler(c)
+				a.Error.NetworkHandler(c)
 			}()
 
 			log.Println("Client is connected:", c.RemoteAddr())

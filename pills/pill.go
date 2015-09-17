@@ -56,7 +56,7 @@ func (p *Pill) Encrypt(pe interfaces.PillEncoder) []byte {
 	return netes.Bytes()
 }
 
-func (p *Pill) Decrypt(pd interfaces.PillDecoder, buf []byte) int {
+func (p *Pill) Decrypt(buf []byte) int {
 	var (
 		header Header          = Header{}
 		netes  *network.Parser = network.NewParser(buf)
@@ -66,5 +66,5 @@ func (p *Pill) Decrypt(pd interfaces.PillDecoder, buf []byte) int {
 	netes.ReadUint32(&header.UniqueId)
 	netes.ReadUint16(&header.Opcode)
 
-	return pd.PreHandler(netes).Process()
+	return p.SetOpcode(int(header.Opcode)).GetIncomingCrumb().PreHandler(netes).Process()
 }

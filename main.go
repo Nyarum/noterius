@@ -13,7 +13,8 @@ func main() {
 	flag.Parse()
 
 	app := land.Application{}
-	app.ErrorHandler = core.LoadErrorHandler()
+	app.Error = core.NewError()
+	defer app.Error.GlobalHandler()
 
 	log.Println("Loading config..")
 	if err := core.LoadConfig(&app.Config, *configPathFlag); err != nil {
