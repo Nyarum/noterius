@@ -62,11 +62,18 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 			log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
 		}
 
-		lenFromData := int(binary.BigEndian.Uint16(buf.Bytes()[0:2]))
-		if buf.Len() < lenFromData {
-			continue
+		var lastGotLen int
+		readLen := func() bool {
+			lastGotLen = int(binary.BigEndian.Uint16(buf.Bytes()[0:2]))
+			if buf.Len() < lastGotLen {
+				return false
+			}
+
+			return true
 		}
 
-		b.ReadChannel <- string(buf.Next(lenFromData))
+		for readLen() {
+			b.ReadChannel <- string(buf.Next(lastGotLen))
+		}
 	}
 }

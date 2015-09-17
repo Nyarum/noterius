@@ -3,7 +3,7 @@
 Next-gen version with new architecture.
 
 This emulator based on:
-- PostgreSQL
+- LevelDB
 - Docker
 - fswatch
 
