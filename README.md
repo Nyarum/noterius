@@ -9,7 +9,7 @@ This emulator based on:
 - Docker
 - fswatch
 - rocker-compose
-- LUA (Comming soon..)
+- LUA (Coming soon..)
 
 ### Installation from latest sources
 
