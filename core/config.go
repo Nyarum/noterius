@@ -9,10 +9,9 @@ import (
 // Config struct for config file
 type Config struct {
 	Base struct {
-		IP    string `yaml:"ip"`
-		Port  string `yaml:"port"`
-		Debug bool   `yaml:"debug"`
-		Test  bool   `yaml:"test"`
+		IP   string `yaml:"ip"`
+		Port string `yaml:"port"`
+		Test bool   `yaml:"test"`
 	} `yaml:"base"`
 
 	Option struct {
@@ -20,7 +19,8 @@ type Config struct {
 	} `yaml:"option"`
 
 	Database struct {
-		Path string `yaml:"path"`
+		Path        string `yaml:"path"`
+		TimeoutSave int    `yaml:"timeoutSave"`
 	} `yaml:"database"`
 }
 

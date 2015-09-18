@@ -70,9 +70,7 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 		var lastGotLen int
 		readLen := func() bool {
 			lastGotLen = int(binary.BigEndian.Uint16(buf.Bytes()[0:2]))
-			if lastGotLen == 0 {
-				return false
-			} else if buf.Len() < lastGotLen {
+			if lastGotLen == 0 || buf.Len() < lastGotLen {
 				return false
 			}
 

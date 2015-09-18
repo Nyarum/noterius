@@ -8,6 +8,8 @@ This emulator based on:
 - PostgreSQL
 - Docker
 - fswatch
+- rocker-compose
+- LUA (Comming soon..)
 
 ### Installation from latest sources
 

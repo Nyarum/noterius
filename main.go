@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	configPathFlag := flag.String("config", "resources/config.yaml", "A config file for start server")
+	configPathFlag := flag.String("config", "resources/config.yml", "A config file for start server")
 	flag.Parse()
 
 	app := land.Application{}
