@@ -9,19 +9,17 @@ import (
 
 // ClientLive method for accept new connection from socket
 func ClientLive(buffers Buffers, conf core.Config) {
-	var (
-		bytesAlloc []byte        = make([]byte, conf.Option.LenBuffer)
-		buffer     *bytes.Buffer = bytes.NewBuffer(bytesAlloc)
-	)
-
+	buffer := bytes.NewBuffer([]byte{})
 	for getBytes := range buffers.GetReadChannel() {
-		copy(bytesAlloc, getBytes)
+		buffer.Write(getBytes)
 
 		if conf.Base.Test {
 			panic("Client is break :D")
 		} else {
 			log.Printf("Print message from client: % x", bytes.TrimRight(buffer.Bytes(), string([]byte{0x00})))
-			buffers.GetWriteChannel() <- "Hello from server\n"
+			buffers.GetWriteChannel() <- []byte{0x00, 0x02}
 		}
+
+		buffer.Reset()
 	}
 }

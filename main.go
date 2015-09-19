@@ -10,6 +10,7 @@ import (
 
 func main() {
 	configPathFlag := flag.String("config", "resources/config.yml", "A config file for start server")
+	dbIPFlag := flag.String("dbip", "", "IP for database")
 	flag.Parse()
 
 	app := land.Application{}
@@ -21,8 +22,12 @@ func main() {
 		log.Fatalln("Config is not load, err - ", err)
 	}
 
+	if *dbIPFlag != "" {
+		app.Config.Database.IP = *dbIPFlag
+	}
+
 	log.Println("Loading database..")
-	if err := core.LoadDatabase(&app.Database, app.Config.Database.Path); err != nil {
+	if err := core.LoadDatabase(&app.Database, &app.Config); err != nil {
 		log.Fatalln("Database is not load, err - ", err)
 	}
 

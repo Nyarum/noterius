@@ -3,9 +3,9 @@ base:
     port: 1973
     test: false
 
-option:
-    lenBuffer: 16384
-
-database: # NoSQL LevelDB written on Go
-    path: ../resources/database.db
+database:
+    ip: 127.0.0.1
+    user: nota
+    password: notadefault
+    name: noterius
     timeoutSave: 15

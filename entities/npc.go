@@ -1,7 +1,10 @@
 package entities
 
-import ()
-
 type NPC struct {
+	Stats    Stats
 	Position Position
+}
+
+func NewNPC() *NPC {
+	return &NPC{}
 }

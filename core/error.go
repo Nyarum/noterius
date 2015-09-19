@@ -26,6 +26,6 @@ func (e *Error) NetworkHandler(c net.Conn) {
 func (e *Error) GlobalHandler() {
 	if r := recover(); r != nil {
 		log.Printf("%s: %s\n", r, debug.Stack())
-		os.Exit(1)
+		os.Exit(0)
 	}
 }

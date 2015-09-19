@@ -20,8 +20,9 @@ containers:
 
   emulator:
     image: nyarum/noterius:latest
+    entrypoint: ["reflex", "-g", "*.go", "-s","--", "go", "run", "-race", "main.go", "-dbip", "{{ bridgeIp }}"]
     volumes:
-      - /home/nyarum/projects/go/src/github.com/Nyarum/noterius:/go/src/github.com/Nyarum/noterius
+      - {{ .dir }}/src/github.com/Nyarum/noterius:/go/src/github.com/Nyarum/noterius
     add_host:
       - db:{{ bridgeIp }}
     ports:

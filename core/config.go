@@ -14,12 +14,11 @@ type Config struct {
 		Test bool   `yaml:"test"`
 	} `yaml:"base"`
 
-	Option struct {
-		LenBuffer int `yaml:"lenBuffer"`
-	} `yaml:"option"`
-
 	Database struct {
-		Path        string `yaml:"path"`
+		IP          string `yaml:"ip"`
+		User        string `yaml:"user"`
+		Password    string `yaml:"password"`
+		Name        string `yaml:"name"`
 		TimeoutSave int    `yaml:"timeoutSave"`
 	} `yaml:"database"`
 }

@@ -1,18 +1,20 @@
 package core
 
 import (
-	"database/sql"
+	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+
+	"fmt"
 )
 
-// Database struct with pointer to LevelDB
+// Database struct
 type Database struct {
-	DB *sql.DB
+	DB gorm.DB
 }
 
-// LoadDatabase method for load LevelDB database from path
-func LoadDatabase(database *Database, path string) (err error) {
-	loadDb, err := sql.Open("postgres", "user=nato password=natodefault dbname=noterius sslmode=verify-full")
+// LoadDatabase method for load database from path
+func LoadDatabase(database *Database, config *Config) (err error) {
+	loadDb, err := gorm.Open("postgres", fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", config.Database.IP, config.Database.User, config.Database.Password, config.Database.Name))
 	defer loadDb.Close()
 	if err != nil {
 		return

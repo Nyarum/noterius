@@ -9,29 +9,30 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 // Buffers struct for read and write channels
 type Buffers struct {
-	WriteChannel chan string
-	ReadChannel  chan string
+	WriteChannel chan []byte
+	ReadChannel  chan []byte
 }
 
 // NewBuffers method for init Buffers struct
 func NewBuffers() *Buffers {
 	return &Buffers{
-		WriteChannel: make(chan string),
-		ReadChannel:  make(chan string),
+		WriteChannel: make(chan []byte),
+		ReadChannel:  make(chan []byte),
 	}
 }
 
 // GetWriteChannel method for get WriteChannel from Buffers struct
-func (b *Buffers) GetWriteChannel() chan string {
+func (b *Buffers) GetWriteChannel() chan []byte {
 	return b.WriteChannel
 }
 
 // GetReadChannel method for get ReadChannel from Buffers struct
-func (b *Buffers) GetReadChannel() chan string {
+func (b *Buffers) GetReadChannel() chan []byte {
 	return b.ReadChannel
 }
 
@@ -42,19 +43,19 @@ func (b *Buffers) WriteHandler(c net.Conn) {
 	c.Write(pill.Encrypt(pill.SetOpcode(940).GetOutcomingCrumb()))
 
 	for v := range b.WriteChannel {
-		c.Write([]byte(v))
+		c.Write(v)
 	}
 }
 
 // ReadHandler method for read bytes from socket in loop to channel
 func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 	var (
-		bytesAlloc []byte = make([]byte, conf.Option.LenBuffer)
+		buf     *bytes.Buffer = bytes.NewBuffer([]byte{})
+		tempBuf []byte        = make([]byte, 2048)
 	)
 
-	buf := bytes.NewBuffer(bytesAlloc)
 	for {
-		_, err := c.Read(bytesAlloc)
+		ln, err := c.Read(tempBuf)
 		if err == io.EOF {
 			log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
 			return
@@ -67,10 +68,17 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 			log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
 		}
 
+		c.SetReadDeadline(time.Now().Add(10 * time.Second))
+		buf.Write(tempBuf[:ln])
+
 		var lastGotLen int
 		readLen := func() bool {
+			if buf.Len() < 2 {
+				return false
+			}
+
 			lastGotLen = int(binary.BigEndian.Uint16(buf.Bytes()[0:2]))
-			if lastGotLen == 0 || buf.Len() < lastGotLen {
+			if buf.Len() < lastGotLen {
 				return false
 			}
 
@@ -78,7 +86,7 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 		}
 
 		for readLen() {
-			b.ReadChannel <- string(buf.Next(lastGotLen))
+			b.ReadChannel <- buf.Next(lastGotLen)
 		}
 	}
 }

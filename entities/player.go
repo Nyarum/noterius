@@ -1,10 +1,10 @@
 package entities
 
-import ()
-
 type Player struct {
-	HP       uint32
-	MP       uint32
-	Level    uint16
+	Stats    Stats
 	Position Position
+}
+
+func NewPlayer() *Player {
+	return &Player{}
 }
