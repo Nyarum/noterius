@@ -18,7 +18,7 @@ type (
 		buffer *bytes.Buffer
 		endian int
 
-		Error error
+		err error
 	}
 )
 
@@ -29,6 +29,11 @@ func NewParser(buf []byte) *Parser {
 	parser.endian = LittleEndian
 
 	return parser
+}
+
+// Error method for get error from netes
+func (p *Parser) Error() error {
+	return p.err
 }
 
 // Buffer method for get pointer to bytes.Buffer
@@ -61,7 +66,7 @@ func (p *Parser) SetEndian(endian int) *Parser {
 func (p *Parser) ReadInt8(value *int8) *Parser {
 	bufInt8 := make([]byte, 1)
 	if bufInt8 = p.buffer.Next(1); len(bufInt8) < 1 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -73,7 +78,7 @@ func (p *Parser) ReadInt8(value *int8) *Parser {
 func (p *Parser) ReadInt16(value *int16) *Parser {
 	bufInt16 := make([]byte, 2)
 	if bufInt16 = p.buffer.Next(2); len(bufInt16) < 2 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -89,7 +94,7 @@ func (p *Parser) ReadInt16(value *int16) *Parser {
 func (p *Parser) ReadInt32(value *int32) *Parser {
 	bufInt := make([]byte, 4)
 	if bufInt = p.buffer.Next(4); len(bufInt) < 4 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -105,7 +110,7 @@ func (p *Parser) ReadInt32(value *int32) *Parser {
 func (p *Parser) ReadInt64(value *int64) *Parser {
 	bufInt64 := make([]byte, 8)
 	if bufInt64 = p.buffer.Next(8); len(bufInt64) < 8 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -121,7 +126,7 @@ func (p *Parser) ReadInt64(value *int64) *Parser {
 func (p *Parser) ReadUint8(value *uint8) *Parser {
 	bufUint8 := make([]byte, 1)
 	if bufUint8 = p.buffer.Next(1); len(bufUint8) < 1 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -133,7 +138,7 @@ func (p *Parser) ReadUint8(value *uint8) *Parser {
 func (p *Parser) ReadUint16(value *uint16) *Parser {
 	bufUint16 := make([]byte, 2)
 	if bufUint16 = p.buffer.Next(2); len(bufUint16) < 2 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -149,7 +154,7 @@ func (p *Parser) ReadUint16(value *uint16) *Parser {
 func (p *Parser) ReadUint32(value *uint32) *Parser {
 	bufUint32 := make([]byte, 4)
 	if bufUint32 = p.buffer.Next(4); len(bufUint32) < 4 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -165,7 +170,7 @@ func (p *Parser) ReadUint32(value *uint32) *Parser {
 func (p *Parser) ReadUint64(value *uint64) *Parser {
 	bufUint64 := make([]byte, 8)
 	if bufUint64 = p.buffer.Next(8); len(bufUint64) < 8 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -181,7 +186,7 @@ func (p *Parser) ReadUint64(value *uint64) *Parser {
 func (p *Parser) ReadFloat32(value *float32) *Parser {
 	bufFloat32 := make([]byte, 4)
 	if bufFloat32 = p.buffer.Next(4); len(bufFloat32) < 4 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -197,7 +202,7 @@ func (p *Parser) ReadFloat32(value *float32) *Parser {
 func (p *Parser) ReadFloat64(value *float64) *Parser {
 	bufFloat64 := make([]byte, 8)
 	if bufFloat64 = p.buffer.Next(8); len(bufFloat64) < 8 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -214,7 +219,7 @@ func (p *Parser) ReadString(value *string) *Parser {
 	var lnString uint16
 	bufLenString := make([]byte, 2)
 	if bufLenString = p.buffer.Next(2); len(bufLenString) < 2 {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -226,7 +231,7 @@ func (p *Parser) ReadString(value *string) *Parser {
 
 	bufString := make([]byte, lnString)
 	if bufString = p.buffer.Next(int(lnString)); len(bufString) < int(lnString) {
-		p.Error = errors.New("Not enough bytes in buffer")
+		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
@@ -235,7 +240,15 @@ func (p *Parser) ReadString(value *string) *Parser {
 	return p
 }
 
-func (p *Parser) ReadBytes(value []byte, ln int) *Parser {
+func (p *Parser) ReadBytes(value *[]byte, ln int) *Parser {
+	bufBytes := make([]byte, ln)
+	if bufBytes = p.buffer.Next(int(ln)); len(bufBytes) < int(ln) {
+		p.err = errors.New("Not enough bytes in buffer")
+		return p
+	}
+
+	(*value) = bufBytes
+
 	return p
 }
 

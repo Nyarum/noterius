@@ -1,4 +1,4 @@
-package entities
+package entitie
 
 type Monster struct {
 	Stats    Stats

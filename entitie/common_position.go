@@ -1,4 +1,4 @@
-package entities
+package entitie
 
 type Position struct {
 	X     int32

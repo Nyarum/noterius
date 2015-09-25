@@ -19,7 +19,7 @@ type Config struct {
 		User        string `yaml:"user"`
 		Password    string `yaml:"password"`
 		Name        string `yaml:"name"`
-		TimeoutSave int    `yaml:"timeoutSave"`
+		TimeoutSave int    `yaml:"timeout_save"`
 	} `yaml:"database"`
 }
 

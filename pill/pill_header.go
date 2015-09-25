@@ -1,4 +1,4 @@
-package pills
+package pill
 
 type Header struct {
 	Len      uint16

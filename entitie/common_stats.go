@@ -1,4 +1,4 @@
-package entities
+package entitie
 
 type Stats struct {
 	HP    uint32

@@ -1,4 +1,4 @@
-package entities
+package entitie
 
 type NPC struct {
 	Stats    Stats

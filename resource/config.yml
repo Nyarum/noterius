@@ -8,4 +8,4 @@ database:
     user: nota
     password: notadefault
     name: noterius
-    timeoutSave: 15
+    timeout_save: 15

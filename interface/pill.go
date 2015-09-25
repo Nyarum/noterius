@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
 )
 
@@ -11,5 +12,5 @@ type PillEncoder interface {
 
 type PillDecoder interface {
 	PreHandler(network.Netes) PillDecoder
-	Process() int
+	Process(entitie.Player) ([]int, error)
 }

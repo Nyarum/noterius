@@ -6,6 +6,7 @@ import (
 
 // Netes interface for network library
 type Netes interface {
+	Error() error
 	Buffer() *bytes.Buffer
 	Bytes() []byte
 	Reset()
@@ -23,7 +24,7 @@ type Netes interface {
 	ReadFloat32(*float32) *Parser
 	ReadFloat64(*float64) *Parser
 	ReadString(*string) *Parser
-	ReadBytes([]byte, int) *Parser
+	ReadBytes(*[]byte, int) *Parser
 	ReadBool(*bool) *Parser
 
 	WriteInt8(int8) *Parser

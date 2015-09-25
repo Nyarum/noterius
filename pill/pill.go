@@ -1,10 +1,13 @@
-package pills
+package pill
 
 import (
-	"github.com/Nyarum/noterius/interfaces"
+	"github.com/Nyarum/noterius/entitie"
+	"github.com/Nyarum/noterius/interface"
 	"github.com/Nyarum/noterius/library/network"
-	"github.com/Nyarum/noterius/pills/incoming"
-	"github.com/Nyarum/noterius/pills/outcoming"
+	"github.com/Nyarum/noterius/pill/incoming"
+	"github.com/Nyarum/noterius/pill/outcoming"
+
+	"errors"
 )
 
 type Pill struct {
@@ -17,10 +20,12 @@ type Pill struct {
 func NewPill() *Pill {
 	return &Pill{
 		incomingCrumbs: map[int]interfaces.PillDecoder{
-			431: &incoming.CrumbAuth{},
+			431: &incoming.AuthCrumb{},
+			432: &incoming.ExitCrumb{},
 		},
 		outcomingCrumbs: map[int]interfaces.PillEncoder{
-			940: &outcoming.CrumbDate{},
+			931: &outcoming.CharacterListCrumb{},
+			940: &outcoming.DateCrumb{},
 		},
 	}
 }
@@ -39,7 +44,7 @@ func (p *Pill) GetOutcomingCrumb() interfaces.PillEncoder {
 	return p.outcomingCrumbs[p.opcode]
 }
 
-func (p *Pill) Encrypt(pe interfaces.PillEncoder) []byte {
+func (p *Pill) Encrypt(pe interfaces.PillEncoder) ([]byte, error) {
 	netes := network.NewParser([]byte{})
 
 	data := pe.Process().PostHandler(netes)
@@ -52,10 +57,15 @@ func (p *Pill) Encrypt(pe interfaces.PillEncoder) []byte {
 	netes.SetEndian(network.LittleEndian).WriteUint16(header.Opcode)
 	netes.WriteBytes([]byte(data))
 
-	return netes.Bytes()
+	err := netes.Error()
+	if err != nil {
+		return nil, err
+	}
+
+	return netes.Bytes(), nil
 }
 
-func (p *Pill) Decrypt(buf []byte) int {
+func (p *Pill) Decrypt(buf []byte, player entitie.Player) ([]int, error) {
 	var (
 		header Header          = Header{}
 		netes  *network.Parser = network.NewParser(buf)
@@ -65,5 +75,20 @@ func (p *Pill) Decrypt(buf []byte) int {
 	netes.SetEndian(network.BigEndian).ReadUint32(&header.UniqueId)
 	netes.SetEndian(network.LittleEndian).ReadUint16(&header.Opcode)
 
-	return p.SetOpcode(int(header.Opcode)).GetIncomingCrumb().PreHandler(netes).Process()
+	crumb := p.SetOpcode(int(header.Opcode)).GetIncomingCrumb()
+	if crumb == nil {
+		return nil, errors.New("Crumb is not found")
+	}
+
+	crumbProcess, err := crumb.PreHandler(netes).Process(player)
+	if err != nil {
+		return nil, err
+	}
+
+	err = netes.Error()
+	if err != nil {
+		return nil, err
+	}
+
+	return crumbProcess, nil
 }

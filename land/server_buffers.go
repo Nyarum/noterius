@@ -2,7 +2,7 @@ package land
 
 import (
 	"github.com/Nyarum/noterius/core"
-	"github.com/Nyarum/noterius/pills"
+	"github.com/Nyarum/noterius/pill"
 
 	"bytes"
 	"encoding/binary"
@@ -37,14 +37,21 @@ func (b *Buffers) GetReadChannel() chan []byte {
 }
 
 // WriteHandler method for write bytes to socket in loop from channel
-func (b *Buffers) WriteHandler(c net.Conn) {
+func (b *Buffers) WriteHandler(c net.Conn) error {
 	// Write one packet for client with time.Now()
-	pill := pills.NewPill()
-	c.Write(pill.Encrypt(pill.SetOpcode(940).GetOutcomingCrumb()))
+	pillInit := pill.NewPill()
+	packet, err := pillInit.Encrypt(pillInit.SetOpcode(940).GetOutcomingCrumb())
+	if err != nil {
+		return err
+	}
+
+	c.Write(packet)
 
 	for v := range b.WriteChannel {
 		c.Write(v)
 	}
+
+	return nil
 }
 
 // ReadHandler method for read bytes from socket in loop to channel
@@ -56,16 +63,18 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 
 	for {
 		ln, err := c.Read(tempBuf)
-		if err == io.EOF {
-			log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
-			return
-		} else if err != nil {
+		if err != nil {
 			if err.(net.Error).Timeout() {
 				log.Printf("Client [%v] is timeout\n", c.RemoteAddr())
-				return
 			}
 
-			log.Printf("Client [%v] is error read packet, err - %v\n", c.RemoteAddr(), err)
+			if err == io.EOF {
+				log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
+			}
+
+			log.Printf("Client [%v] has closed connection\n", c.RemoteAddr())
+
+			return
 		}
 
 		c.SetReadDeadline(time.Now().Add(10 * time.Second))

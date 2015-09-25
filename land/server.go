@@ -38,8 +38,13 @@ func (a *Application) Run() (err error) {
 
 			log.Println("Client is connected:", c.RemoteAddr())
 
-			go ClientLive(*buffers, conf)
-			go buffers.WriteHandler(c)
+			go ClientLive(*buffers, conf, c)
+			go func() {
+				err := buffers.WriteHandler(c)
+				if err != nil {
+					log.Fatalln("Error in WriteHandler func")
+				}
+			}()
 
 			buffers.ReadHandler(c, conf)
 		}(client, a.Config)

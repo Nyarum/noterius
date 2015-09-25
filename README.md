@@ -2,7 +2,7 @@
 
 Next-gen version with new architecture.
 
-Version: 0.1.2
+Version: 0.1.3
 
 This emulator based on:
 - PostgreSQL
@@ -10,6 +10,11 @@ This emulator based on:
 - fswatch
 - rocker-compose
 - LUA (Coming soon..)
+
+### What does work?
+- Authorization
+- Exit
+- Keep alive connect
 
 ### Installation from latest sources
 
@@ -30,7 +35,7 @@ $ docker build -t nyarum/noterius .
 
 - Start project in docker
 ```
-$ docker run -d -p 1973:1973 nyarum/noterius
+$ rocker-compose run -var dir=$GOPATH -attach
 ```
 
 ### Installation from stable release
@@ -42,7 +47,7 @@ $ docker pull nyarum/noterius
 
 - Start project in docker
 ```
-$ docker run -d -p 1973:1973 nyarum/noterius
+$ rocker-compose run -var dir=$GOPATH -attach
 ```
 
 ### Trailer for game
