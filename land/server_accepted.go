@@ -4,14 +4,16 @@ import (
 	"github.com/Nyarum/noterius/core"
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/pill"
+	log "github.com/Sirupsen/logrus"
 
 	"bytes"
-	"log"
 	"net"
 )
 
 // ClientLive method for accept new connection from socket
 func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
+	defer core.ErrorNetworkHandler(c)
+
 	buffer := bytes.NewBuffer([]byte{})
 	player := entitie.NewPlayer(c)
 	pillInit := pill.NewPill()
@@ -20,21 +22,21 @@ func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
 		buffer.Write(getBytes)
 
 		if conf.Base.Test {
-			panic("Client is break =_=")
+			log.Panic("Client is break =_=")
 		} else {
-			log.Printf("Print message from client: % x", buffer.Bytes())
+			log.WithField("bytes", buffer.Bytes()).Info("Print message from client")
 
 			if buffer.Len() >= 8 {
 				opcodes, err := pillInit.Decrypt(buffer.Bytes(), *player)
 				if err != nil {
-					log.Println("Error in pill decrypt, err -", err)
+					log.WithError(err).Panic("Error in pill decrypt")
 				}
 
 				if opcodes != nil {
 					for _, v := range opcodes {
 						pillEncrypt, err := pillInit.Encrypt(pillInit.SetOpcode(v).GetOutcomingCrumb())
 						if err != nil {
-							log.Println("Error in pill encrypt, err -", err)
+							log.WithError(err).Error("Error in pill encrypt")
 						}
 
 						buffers.GetWriteChannel() <- pillEncrypt

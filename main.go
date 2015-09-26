@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/Nyarum/noterius/core"
 	"github.com/Nyarum/noterius/land"
+	log "github.com/Sirupsen/logrus"
 
 	"flag"
-	"log"
 )
 
 func main() {
@@ -14,25 +14,27 @@ func main() {
 	flag.Parse()
 
 	app := land.Application{}
-	app.Error = core.NewError()
-	defer app.Error.GlobalHandler()
+	defer core.ErrorGlobalHandler()
 
-	log.Println("Loading config..")
-	if err := core.LoadConfig(&app.Config, *configPathFlag); err != nil {
-		log.Fatalln("Config is not load, err - ", err)
+	log.Info("Loading logger..")
+	core.NewLogger()
+
+	log.Info("Loading config..")
+	if err := core.NewConfig(&app.Config, *configPathFlag); err != nil {
+		log.WithError(err).Panic("Config is not load")
 	}
 
 	if *dbIPFlag != "" {
 		app.Config.Database.IP = *dbIPFlag
 	}
 
-	log.Println("Loading database..")
-	if err := core.LoadDatabase(&app.Database, &app.Config); err != nil {
-		log.Fatalln("Database is not load, err - ", err)
+	log.Info("Loading database..")
+	if err := core.NewDatabase(&app.Database, &app.Config); err != nil {
+		log.WithError(err).Panic("Database is not load")
 	}
 
-	log.Printf("Server starting on %v address\n", app.Config.Base.IP+":"+app.Config.Base.Port)
+	log.WithField("address", app.Config.Base.IP+":"+app.Config.Base.Port).Info("Server starting")
 	if err := app.Run(); err != nil {
-		log.Fatalln("Server is not started, err - ", err)
+		log.WithError(err).Panic("Server is not started")
 	}
 }

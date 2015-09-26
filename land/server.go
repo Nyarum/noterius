@@ -2,8 +2,9 @@ package land
 
 import (
 	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/station"
+	log "github.com/Sirupsen/logrus"
 
-	"log"
 	"net"
 )
 
@@ -11,7 +12,6 @@ import (
 type Application struct {
 	Config   core.Config
 	Database core.Database
-	Error    *core.Error
 }
 
 // Run method for starting server
@@ -21,30 +21,32 @@ func (a *Application) Run() (err error) {
 		return
 	}
 
+	// Loading station for hard work
+	databaseRobot := station.NewDatabaseRobot()
+	go databaseRobot.SaveOnTimeout(a.Config)
+
 	for {
 		client, err := listen.Accept()
 		if err != nil {
-			log.Println(err)
+			log.WithError(err).Error("Error in accept connection")
 			continue
 		}
 
 		go func(c net.Conn, conf core.Config) {
 			var buffers *Buffers = NewBuffers()
+
 			defer func() {
 				close(buffers.GetReadChannel())
 				close(buffers.GetWriteChannel())
-				a.Error.NetworkHandler(c)
+				core.ErrorNetworkHandler(c)
 			}()
 
-			log.Println("Client is connected:", c.RemoteAddr())
+			log.WithFields(log.Fields{
+				"address": c.RemoteAddr(),
+			}).Info("Client is connected")
 
 			go ClientLive(*buffers, conf, c)
-			go func() {
-				err := buffers.WriteHandler(c)
-				if err != nil {
-					log.Fatalln("Error in WriteHandler func")
-				}
-			}()
+			go buffers.WriteHandler(c)
 
 			buffers.ReadHandler(c, conf)
 		}(client, a.Config)

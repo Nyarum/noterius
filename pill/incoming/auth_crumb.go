@@ -4,8 +4,7 @@ import (
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/interface"
 	"github.com/Nyarum/noterius/library/network"
-
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 type AuthCrumb struct {
@@ -29,8 +28,12 @@ func (a *AuthCrumb) PreHandler(netes network.Netes) interfaces.PillDecoder {
 }
 
 func (a *AuthCrumb) Process(player entitie.Player) ([]int, error) {
-	log.Println("Login:", a.Login)
-	log.Println("Client version:", a.ClientVersion)
+	log.WithFields(log.Fields{
+		"value": a.Login,
+	}).Info("Login")
+	log.WithFields(log.Fields{
+		"value": a.ClientVersion,
+	}).Info("Client version")
 
 	return []int{931}, nil
 }

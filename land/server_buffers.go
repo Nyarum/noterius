@@ -3,11 +3,11 @@ package land
 import (
 	"github.com/Nyarum/noterius/core"
 	"github.com/Nyarum/noterius/pill"
+	log "github.com/Sirupsen/logrus"
 
 	"bytes"
 	"encoding/binary"
 	"io"
-	"log"
 	"net"
 	"time"
 )
@@ -37,12 +37,14 @@ func (b *Buffers) GetReadChannel() chan []byte {
 }
 
 // WriteHandler method for write bytes to socket in loop from channel
-func (b *Buffers) WriteHandler(c net.Conn) error {
+func (b *Buffers) WriteHandler(c net.Conn) {
+	defer core.ErrorNetworkHandler(c)
+
 	// Write one packet for client with time.Now()
 	pillInit := pill.NewPill()
 	packet, err := pillInit.Encrypt(pillInit.SetOpcode(940).GetOutcomingCrumb())
 	if err != nil {
-		return err
+		log.WithError(err).Error("Error in pill encrypt")
 	}
 
 	c.Write(packet)
@@ -50,8 +52,6 @@ func (b *Buffers) WriteHandler(c net.Conn) error {
 	for v := range b.WriteChannel {
 		c.Write(v)
 	}
-
-	return nil
 }
 
 // ReadHandler method for read bytes from socket in loop to channel
@@ -65,14 +65,14 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 		ln, err := c.Read(tempBuf)
 		if err != nil {
 			if err.(net.Error).Timeout() {
-				log.Printf("Client [%v] is timeout\n", c.RemoteAddr())
+				log.WithField("address", c.RemoteAddr()).Warn("Client is timeout")
 			}
 
 			if err == io.EOF {
-				log.Printf("Client [%v] is disconnected\n", c.RemoteAddr())
+				log.WithField("address", c.RemoteAddr()).Warn("Client is disconnected")
 			}
 
-			log.Printf("Client [%v] has closed connection\n", c.RemoteAddr())
+			log.WithField("address", c.RemoteAddr()).Warn("Client has closed connection")
 
 			return
 		}

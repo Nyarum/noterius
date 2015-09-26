@@ -1,31 +1,27 @@
 package core
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
+
 	"net"
 	"os"
 	"runtime/debug"
 )
 
-type Error struct{}
-
-func NewError() *Error {
-	return &Error{}
-}
-
-// NetworkHandler method for handler client accepted
-func (e *Error) NetworkHandler(c net.Conn) {
+// ErrorNetworkHandle method for handler client accepted
+func ErrorNetworkHandler(c net.Conn) {
 	if r := recover(); r != nil {
-		log.Printf("%s: %s\n", r, debug.Stack())
+		log.WithField("error", string(debug.Stack())).Error("Error in network")
 	}
 
 	c.Close()
+
 }
 
-// GlobalHandler method for handler global fatals
-func (e *Error) GlobalHandler() {
+// ErrorGlobalHandler method for handler global fatals
+func ErrorGlobalHandler() {
 	if r := recover(); r != nil {
-		log.Printf("%s: %s\n", r, debug.Stack())
+		log.WithField("error", string(debug.Stack())).Error("Error in starting server")
 		os.Exit(0)
 	}
 }

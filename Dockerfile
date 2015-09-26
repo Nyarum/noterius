@@ -10,6 +10,7 @@ RUN go get -u gopkg.in/yaml.v2
 RUN go get -u github.com/cespare/reflex
 RUN go get -u github.com/lib/pq
 RUN go get -u github.com/jinzhu/gorm
+RUN go get -u github.com/Sirupsen/logrus
 
 EXPOSE 1973
 
