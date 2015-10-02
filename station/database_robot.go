@@ -14,7 +14,7 @@ func NewDatabaseRobot() *DatabaseRobot {
 	return &DatabaseRobot{}
 }
 
-func (d *DatabaseRobot) ContiniusParse() {
+func (d *DatabaseRobot) Parse() {
 
 }
 
