@@ -22,7 +22,7 @@ containers:
     image: nyarum/noterius:latest
     entrypoint: ["reflex", "-r", '\.go$', "-s","--", "go", "run", "-race", "main.go", "-dbip", "{{ bridgeIp }}"]
     volumes:
-      - {{ .dir }}/src/github.com/Nyarum/noterius:/go/src/github.com/Nyarum/noterius
+      - .:/go/src/github.com/Nyarum/noterius
     add_host:
       - db:{{ bridgeIp }}
     ports:

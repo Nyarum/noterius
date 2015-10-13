@@ -7,6 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"bytes"
+	"fmt"
 	"net"
 )
 
@@ -24,7 +25,7 @@ func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
 		if conf.Base.Test {
 			log.Panic("Client is break =_=")
 		} else {
-			log.WithField("bytes", buffer.Bytes()).Info("Print message from client")
+			log.WithField("bytes", fmt.Sprintf("% x", buffer.Bytes())).Info("Print message from client")
 
 			if buffer.Len() >= 8 {
 				opcodes, err := pillInit.Decrypt(buffer.Bytes(), *player)
