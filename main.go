@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	configPathFlag := flag.String("config", "resource/config.yml", "A config file for start server")
+	configPathFlag := flag.String("config", "resource/config.yml", "Config file for start server")
 	dbIPFlag := flag.String("dbip", "", "IP for database")
 	flag.Parse()
 
