@@ -1,14 +1,13 @@
 language: go
-
 go:
     - tip
-
 before_deploy:
     - GOARCH=amd64 GOOS=linux go build -o noterius_linux_x64 main.go
     - GOARCH=386 GOOS=linux go build -o noterius_linux_x32 main.go
-    - GOARCH=amd64 GOOS=windows go build -o noterius_windows_x64 main.go
-    - GOARCH=386 GOOS=windows go build -o noterius_windows_x32 main.go
-
+    - GOARCH=amd64 GOOS=windows go build -o noterius_windows_x64.exe main.go
+    - GOARCH=386 GOOS=windows go build -o noterius_windows_x32.exe main.go
+    - GOARCH=amd64 GOOS=darwin go build -o noterius_darwin_x64 main.go
+    - GOARCH=amd64 GOOS=darwin go build -o noterius_darwin_x32 main.go
 deploy:
     provider: releases
     api_key:
@@ -16,8 +15,10 @@ deploy:
     file:
         - noterius_linux_x64
         - noterius_linux_x32
-        - noterius_windows_x64
-        - noterius_windows_x32
+        - noterius_windows_x64.exe
+        - noterius_windows_x32.exe
+        - noterius_darwin_x64
+        - noterius_darwin_x32
     on:
         repo: Nyarum/noterius
         tags: true
