@@ -13,14 +13,17 @@ func main() {
 	dbIPFlag := flag.String("dbip", "", "IP for database")
 	flag.Parse()
 
-	app := land.Application{}
+	var (
+		err error
+		app land.Application = land.Application{}
+	)
 	defer core.ErrorGlobalHandler()
 
 	log.Info("Loading logger..")
 	core.NewLogger()
 
 	log.Info("Loading config..")
-	if err := core.NewConfig(&app.Config, *configPathFlag); err != nil {
+	if app.Config, err = core.NewConfig(*configPathFlag); err != nil {
 		log.WithError(err).Panic("Config is not load")
 	}
 
@@ -29,7 +32,7 @@ func main() {
 	}
 
 	log.Info("Loading database..")
-	if err := core.NewDatabase(&app.Database, &app.Config); err != nil {
+	if app.Database, err = core.NewDatabase(&app.Config); err != nil {
 		log.WithError(err).Panic("Database is not load")
 	}
 

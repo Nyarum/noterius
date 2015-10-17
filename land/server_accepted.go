@@ -22,7 +22,7 @@ func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
 	for getBytes := range buffers.GetReadChannel() {
 		buffer.Write(getBytes)
 
-		if conf.Base.Test {
+		if conf.Base.Debug {
 			log.Panic("Client is break =_=")
 		} else {
 			log.WithField("bytes", fmt.Sprintf("% x", buffer.Bytes())).Info("Print message from client")
