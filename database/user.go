@@ -9,7 +9,7 @@ type User struct {
 	Login       string
 	Password    string
 	CharacterId int64
-	Character   Charactter
+	Character   Character
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
