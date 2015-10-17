@@ -29,3 +29,6 @@ noterius_windows_x64.exe
 noterius_windows_x32.exe
 noterius_darwin_x64
 noterius_darwin_x32
+
+resource
+resource/*

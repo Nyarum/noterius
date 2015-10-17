@@ -1,4 +1,5 @@
 # Noterius - emulator for Pirate King Online
+![](https://travis-ci.org/Nyarum/noterius.svg?branch=master)
 
 Next-gen version with new architecture.
 
