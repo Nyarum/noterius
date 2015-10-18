@@ -15,7 +15,9 @@ This emulator based on:
 - Exit
 - Keep alive connect
 
-### Installation from latest sources
+### Installation
+
+#### Docker - from latest sources
 
 - Download project
 ```
@@ -34,10 +36,10 @@ $ docker build -t nyarum/noterius .
 
 - Start project in docker
 ```
-$ rocker-compose run -var dir=$GOPATH -attach
+$ rocker-compose run -attach
 ```
 
-### Installation from stable release
+#### Docker - from stable releases
 
 - Pull docker image
 ```
@@ -46,8 +48,16 @@ $ docker pull nyarum/noterius
 
 - Start project in docker
 ```
-$ rocker-compose run -var dir=$GOPATH -attach
+$ rocker-compose run -attach
 ```
+
+#### Use binary without docker
+
+- Download binary from [releases page](https://github.com/Nyarum/noterius/releases)
+
+- Install PostgreSQL
+
+- Run binary and edit a config for your settings
 
 ### Trailer for game
 
