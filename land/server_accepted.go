@@ -20,6 +20,7 @@ func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
 	pillInit := pill.NewPill()
 
 	for getBytes := range buffers.GetReadChannel() {
+		buffer.Reset()
 		buffer.Write(getBytes)
 
 		if conf.Base.Debug {
@@ -47,7 +48,5 @@ func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
 				buffers.GetWriteChannel() <- []byte{0x00, 0x02}
 			}
 		}
-
-		buffer.Reset()
 	}
 }

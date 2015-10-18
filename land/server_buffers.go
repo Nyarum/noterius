@@ -95,7 +95,9 @@ func (b *Buffers) ReadHandler(c net.Conn, conf core.Config) {
 		}
 
 		for readLen() {
-			b.ReadChannel <- buf.Next(lastGotLen)
+			sendBuffer := make([]byte, ln)
+			copy(sendBuffer, buf.Next(lastGotLen))
+			b.ReadChannel <- sendBuffer
 		}
 	}
 }
