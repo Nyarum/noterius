@@ -4,10 +4,10 @@
 Next-gen version with new architecture.
 
 This emulator based on:
-- PostgreSQL
-- Docker
-- fswatch
-- rocker-compose
+- [PostgreSQL](http://www.postgresql.org/)
+- [Docker](https://www.docker.com/toolbox)
+- [Reflex](https://github.com/cespare/reflex)
+- [rocker-compose](https://github.com/grammarly/rocker-compose)
 - LUA (Coming soon..)
 
 ### What does work?
