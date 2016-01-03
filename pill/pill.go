@@ -1,53 +1,52 @@
 package pill
 
 import (
-	"github.com/Nyarum/noterius/entitie"
-	"github.com/Nyarum/noterius/interface"
-	"github.com/Nyarum/noterius/library/network"
-	"github.com/Nyarum/noterius/pill/incoming"
-	"github.com/Nyarum/noterius/pill/outcoming"
-
 	"errors"
+
+	"github.com/Nyarum/noterius/entitie"
+	"github.com/Nyarum/noterius/library/network"
 )
 
-type Pill struct {
-	incomingCrumbs  map[int]interfaces.PillDecoder
-	outcomingCrumbs map[int]interfaces.PillEncoder
+type PillFactory interface {
+	Error() error
+	Opcodes() []int
+	Handler(network.Netes) PillFactory
+	Process(*entitie.Player) PillFactory
+}
 
-	opcode int
+type Pill struct {
+	packets map[int]PillFactory
+	opcode  int
+}
+
+type Header struct {
+	Len      uint16
+	UniqueId uint32
+	Opcode   uint16
 }
 
 func NewPill() *Pill {
 	return &Pill{
-		incomingCrumbs: map[int]interfaces.PillDecoder{
-			431: &incoming.AuthCrumb{},
-			432: &incoming.ExitCrumb{},
-		},
-		outcomingCrumbs: map[int]interfaces.PillEncoder{
-			931: &outcoming.CharacterListCrumb{},
-			940: &outcoming.DateCrumb{},
+		packets: map[int]PillFactory{
+			AuthOpcode:          &Auth{},
+			ExitOpcode:          &Exit{},
+			CharacterListOpcode: &CharacterList{},
+			DateOpcode:          &Date{},
 		},
 	}
 }
 
-func (p *Pill) SetOpcode(opcode int) *Pill {
+func (p *Pill) GetPill(opcode int) PillFactory {
 	p.opcode = opcode
 
-	return p
+	return p.packets[p.opcode]
 }
 
-func (p *Pill) GetIncomingCrumb() interfaces.PillDecoder {
-	return p.incomingCrumbs[p.opcode]
-}
-
-func (p *Pill) GetOutcomingCrumb() interfaces.PillEncoder {
-	return p.outcomingCrumbs[p.opcode]
-}
-
-func (p *Pill) Encrypt(pe interfaces.PillEncoder) ([]byte, error) {
+func (p *Pill) Encrypt(pf PillFactory, player *entitie.Player) ([]byte, error) {
 	netes := network.NewParser([]byte{})
 
-	data := pe.Process().PostHandler(netes)
+	pf.Process(player).Handler(netes)
+	data := string(netes.Bytes())
 	netes.Reset()
 
 	header := Header{Len: uint16(len(data) + 8), UniqueId: 128, Opcode: uint16(p.opcode)}
@@ -65,7 +64,7 @@ func (p *Pill) Encrypt(pe interfaces.PillEncoder) ([]byte, error) {
 	return netes.Bytes(), nil
 }
 
-func (p *Pill) Decrypt(buf []byte, player entitie.Player) ([]int, error) {
+func (p *Pill) Decrypt(buf []byte, player *entitie.Player) ([]int, error) {
 	var (
 		header Header          = Header{}
 		netes  *network.Parser = network.NewParser(buf)
@@ -75,20 +74,20 @@ func (p *Pill) Decrypt(buf []byte, player entitie.Player) ([]int, error) {
 	netes.SetEndian(network.BigEndian).ReadUint32(&header.UniqueId)
 	netes.SetEndian(network.LittleEndian).ReadUint16(&header.Opcode)
 
-	crumb := p.SetOpcode(int(header.Opcode)).GetIncomingCrumb()
-	if crumb == nil {
-		return nil, errors.New("Crumb is not found")
+	pill := p.GetPill(int(header.Opcode))
+	if pill == nil {
+		return nil, errors.New("Pill is not found")
 	}
 
-	crumbProcess, err := crumb.PreHandler(netes).Process(player)
+	process := pill.Handler(netes).Process(player)
+	if process.Error() != nil {
+		return nil, process.Error()
+	}
+
+	err := netes.Error()
 	if err != nil {
 		return nil, err
 	}
 
-	err = netes.Error()
-	if err != nil {
-		return nil, err
-	}
-
-	return crumbProcess, nil
+	return process.Opcodes(), nil
 }

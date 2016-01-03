@@ -17,35 +17,32 @@ func ClientLive(buffers Buffers, conf core.Config, c net.Conn) {
 
 	buffer := bytes.NewBuffer([]byte{})
 	player := entitie.NewPlayer(c)
-	pillInit := pill.NewPill()
+	newPill := pill.NewPill()
 
 	for getBytes := range buffers.GetReadChannel() {
 		buffer.Reset()
 		buffer.Write(getBytes)
 
-		if conf.Base.Debug {
-			log.Panic("Client is break =_=")
-		} else {
-			log.WithField("bytes", fmt.Sprintf("% x", buffer.Bytes())).Info("Print message from client")
+		log.WithField("bytes", fmt.Sprintf("% x", buffer.Bytes())).Info("Print message from client")
 
-			if buffer.Len() >= 8 {
-				opcodes, err := pillInit.Decrypt(buffer.Bytes(), *player)
+		if buffer.Len() <= 2 {
+			buffers.GetWriteChannel() <- []byte{0x00, 0x02}
+			continue
+		}
+
+		opcodes, err := newPill.Decrypt(buffer.Bytes(), player)
+		if err != nil {
+			log.WithError(err).Panic("Error in pill decrypt")
+		}
+
+		if opcodes != nil {
+			for _, opcode := range opcodes {
+				pillEncrypt, err := newPill.Encrypt(newPill.GetPill(opcode), player)
 				if err != nil {
-					log.WithError(err).Panic("Error in pill decrypt")
+					log.WithError(err).Error("Error in pill encrypt")
 				}
 
-				if opcodes != nil {
-					for _, v := range opcodes {
-						pillEncrypt, err := pillInit.Encrypt(pillInit.SetOpcode(v).GetOutcomingCrumb())
-						if err != nil {
-							log.WithError(err).Error("Error in pill encrypt")
-						}
-
-						buffers.GetWriteChannel() <- pillEncrypt
-					}
-				}
-			} else {
-				buffers.GetWriteChannel() <- []byte{0x00, 0x02}
+				buffers.GetWriteChannel() <- pillEncrypt
 			}
 		}
 	}

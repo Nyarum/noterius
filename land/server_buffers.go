@@ -2,6 +2,7 @@ package land
 
 import (
 	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/pill"
 	log "github.com/Sirupsen/logrus"
 
@@ -41,8 +42,8 @@ func (b *Buffers) WriteHandler(c net.Conn) {
 	defer core.ErrorNetworkHandler(c)
 
 	// Write one packet for client with time.Now()
-	pillInit := pill.NewPill()
-	packet, err := pillInit.Encrypt(pillInit.SetOpcode(940).GetOutcomingCrumb())
+	newPill := pill.NewPill()
+	packet, err := newPill.Encrypt(newPill.GetPill(pill.DateOpcode), &entitie.Player{})
 	if err != nil {
 		log.WithError(err).Error("Error in pill encrypt")
 	}

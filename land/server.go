@@ -2,7 +2,7 @@ package land
 
 import (
 	"github.com/Nyarum/noterius/core"
-	"github.com/Nyarum/noterius/station"
+	"github.com/Nyarum/noterius/robot"
 	log "github.com/Sirupsen/logrus"
 
 	"net"
@@ -21,9 +21,10 @@ func (a *Application) Run() (err error) {
 		return
 	}
 
-	// Loading station for hard work
-	databaseRobot := station.NewDatabaseRobot()
-	go databaseRobot.SaveOnTimeout(a.Config)
+	robot := robot.NewRobot()
+	for _, factory := range robot.Factories {
+		go factory.Process(a.Config)
+	}
 
 	for {
 		client, err := listen.Accept()
