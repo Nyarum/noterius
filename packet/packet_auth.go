@@ -8,13 +8,6 @@ import (
 	"github.com/Nyarum/noterius/library/network"
 )
 
-func init() {
-	Register(431, (*IncomingAuth)(&IncomingAuth{}).Packet)
-	Register(432, (*IncomingExit)(&IncomingExit{}).Packet)
-	Register(931, (*OutcomingCharacters)(&OutcomingCharacters{}).Packet)
-	Register(940, (*OutcomingDate)(&OutcomingDate{}).Packet)
-}
-
 type OutcomingDate struct {
 	Time string
 }

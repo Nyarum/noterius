@@ -9,12 +9,6 @@ import (
 
 type PacketFactory func() (func(network.Netes), func(*entitie.Player))
 
-var packetFuncs map[int]PacketFactory = make(map[int]PacketFactory)
-
-func Register(opcode int, funcCall PacketFactory) {
-	packetFuncs[opcode] = funcCall
-}
-
 type Packet struct {
 	pills  map[int]PacketFactory
 	Player *entitie.Player
@@ -28,7 +22,12 @@ type PacketHeader struct {
 
 func NewPacket(player *entitie.Player) *Packet {
 	return &Packet{
-		pills:  packetFuncs,
+		pills: map[int]PacketFactory{
+			431: (*IncomingAuth)(&IncomingAuth{}).Packet,
+			432: (*IncomingExit)(&IncomingExit{}).Packet,
+			931: (*OutcomingCharacters)(&OutcomingCharacters{}).Packet,
+			940: (*OutcomingDate)(&OutcomingDate{}).Packet,
+		},
 		Player: player,
 	}
 }
