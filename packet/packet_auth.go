@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
 	log "github.com/Sirupsen/logrus"
 )
 
 func init() {
 	Register(431, (*IncomingAuth)(&IncomingAuth{}).Packet)
+	Register(432, (*IncomingExit)(&IncomingExit{}).Packet)
 	Register(931, (*OutcomingCharacters)(&OutcomingCharacters{}).Packet)
 	Register(940, (*OutcomingDate)(&OutcomingDate{}).Packet)
 }
@@ -18,14 +20,14 @@ type OutcomingDate struct {
 	Time string
 }
 
-func (i *OutcomingDate) Packet() (func(netes network.Netes), func()) {
+func (i *OutcomingDate) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
 	handler := func(netes network.Netes) {
 		netes.WriteString(i.Time)
 
 		return
 	}
 
-	process := func() {
+	process := func(player *entitie.Player) {
 		timeNow := time.Now()
 		i.Time = fmt.Sprintf("[%d-%d %d:%d:%d:%d]", timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), timeNow.Second(), timeNow.Nanosecond()/1000000)
 
@@ -44,7 +46,7 @@ type IncomingAuth struct {
 	ClientVersion uint16
 }
 
-func (i *IncomingAuth) Packet() (func(netes network.Netes), func()) {
+func (i *IncomingAuth) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
 	handler := func(netes network.Netes) {
 		netes.ReadString(&i.Key)
 		netes.ReadString(&i.Login)
@@ -53,13 +55,13 @@ func (i *IncomingAuth) Packet() (func(netes network.Netes), func()) {
 		netes.ReadUint16(&i.IsCheat)
 		netes.ReadUint16(&i.ClientVersion)
 
-		fmt.Println(i)
-
 		return
 	}
 
-	process := func() {
-		log.Info("Test process")
+	process := func(player *entitie.Player) {
+		log.Info("Packet auth")
+
+		player.Stats.Name = i.Login
 
 		return
 	}
@@ -76,7 +78,7 @@ type OutcomingCharacters struct {
 	DwFlag     uint32
 }
 
-func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func()) {
+func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
 	handler := func(netes network.Netes) {
 		netes.WriteUint16(uint16(0))
 		netes.WriteBytes([]byte{0x00, 0x08, 0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49})
@@ -88,8 +90,27 @@ func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func()) {
 		return
 	}
 
-	process := func() {
-		log.Info("Test process")
+	process := func(player *entitie.Player) {
+		log.Info("Packet characters")
+
+		return
+	}
+
+	return handler, process
+}
+
+type IncomingExit struct {
+}
+
+func (i *IncomingExit) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
+	handler := func(netes network.Netes) {
+		return
+	}
+
+	process := func(player *entitie.Player) {
+		log.Info("Packet exit")
+
+		player.Buffers.GetEC() <- struct{}{}
 
 		return
 	}

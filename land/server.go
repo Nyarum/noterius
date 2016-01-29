@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/packet"
 	"github.com/Nyarum/noterius/robot"
 	log "github.com/Sirupsen/logrus"
@@ -19,13 +20,16 @@ type Application struct {
 }
 
 // ClientLive method for accept new connection from socket
-func ConnectHandler(buffers core.Buffers, conf core.Config, c net.Conn) {
+func ConnectHandler(buffers *core.Buffers, conf core.Config, c net.Conn) {
 	defer core.ErrorNetworkHandler(c)
 
-	buffer := bytes.NewBuffer([]byte{})
-	//player := entitie.NewPlayer(c)
-	packetAlloc := packet.NewPacket()
+	var (
+		buffer      *bytes.Buffer   = bytes.NewBuffer([]byte{})
+		player      *entitie.Player = entitie.NewPlayer(buffers)
+		packetAlloc *packet.Packet  = packet.NewPacket(player)
+	)
 
+	// Once send first a packet
 	packet, err := packetAlloc.Encode(940)
 	if err != nil {
 		log.WithError(err).Error("Error in pill encrypt")
@@ -39,6 +43,7 @@ func ConnectHandler(buffers core.Buffers, conf core.Config, c net.Conn) {
 
 		log.WithField("bytes", fmt.Sprintf("% x", buffer.Bytes())).Info("Print message from client")
 
+		// Ping <-> pong
 		if buffer.Len() <= 2 {
 			buffers.GetWC() <- []byte{0x00, 0x02}
 			continue
@@ -84,10 +89,10 @@ func (a *Application) Run() (err error) {
 				"address": c.RemoteAddr(),
 			}).Info("Client is connected")
 
-			go buffers.ReadHandler(c, conf)
+			go ConnectHandler(buffers, conf, c)
 			go buffers.WriteHandler(c)
 
-			ConnectHandler(*buffers, conf, c)
+			buffers.ReadHandler(c, conf)
 		}(client, a.Config)
 	}
 }

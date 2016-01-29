@@ -1,16 +1,14 @@
 package entitie
 
-import (
-	"net"
-)
+import "github.com/Nyarum/noterius/core"
 
 type Player struct {
 	Stats    Stats
 	Position Position
 
-	Connection net.Conn
+	Buffers *core.Buffers
 }
 
-func NewPlayer(c net.Conn) *Player {
-	return &Player{Connection: c}
+func NewPlayer(buffers *core.Buffers) *Player {
+	return &Player{Buffers: buffers}
 }

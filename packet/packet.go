@@ -3,10 +3,11 @@ package packet
 import (
 	"errors"
 
+	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
 )
 
-type PacketFactory func() (func(netes network.Netes), func())
+type PacketFactory func() (func(network.Netes), func(*entitie.Player))
 
 var packetFuncs map[int]PacketFactory = make(map[int]PacketFactory)
 
@@ -15,7 +16,8 @@ func Register(opcode int, funcCall PacketFactory) {
 }
 
 type Packet struct {
-	pills map[int]PacketFactory
+	pills  map[int]PacketFactory
+	Player *entitie.Player
 }
 
 type PacketHeader struct {
@@ -24,9 +26,10 @@ type PacketHeader struct {
 	Opcode   uint16
 }
 
-func NewPacket() *Packet {
+func NewPacket(player *entitie.Player) *Packet {
 	return &Packet{
-		pills: packetFuncs,
+		pills:  packetFuncs,
+		Player: player,
 	}
 }
 
@@ -49,7 +52,7 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 
 	handler, process := pck()
 
-	process()
+	process(p.Player)
 	handler(netes)
 
 	data := string(netes.Bytes())
@@ -88,7 +91,7 @@ func (p *Packet) Decode(buf []byte) error {
 	handler, process := pck()
 
 	handler(netes)
-	process()
+	process(p.Player)
 
 	err = netes.Error()
 	if err != nil {

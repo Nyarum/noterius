@@ -14,6 +14,7 @@ import (
 type Buffers struct {
 	writeChannel chan []byte
 	readChannel  chan []byte
+	exitChannel  chan struct{}
 }
 
 // NewBuffers method for init Buffers struct
@@ -21,22 +22,29 @@ func NewBuffers() *Buffers {
 	return &Buffers{
 		writeChannel: make(chan []byte),
 		readChannel:  make(chan []byte),
+		exitChannel:  make(chan struct{}),
 	}
 }
 
-// GetWriteChannel method for get WriteChannel from Buffers struct
+// GetWC method for get writeChannel from Buffers struct
 func (b *Buffers) GetWC() chan []byte {
 	return b.writeChannel
 }
 
-// GetReadChannel method for get ReadChannel from Buffers struct
+// GetRC method for get readChannel from Buffers struct
 func (b *Buffers) GetRC() chan []byte {
 	return b.readChannel
+}
+
+// GetEC method for get exitChannel from Buffers struct
+func (b *Buffers) GetEC() chan struct{} {
+	return b.exitChannel
 }
 
 func (b *Buffers) Close() {
 	close(b.readChannel)
 	close(b.writeChannel)
+	close(b.exitChannel)
 
 	return
 }
@@ -56,6 +64,14 @@ func (b *Buffers) ReadHandler(c net.Conn, conf Config) {
 		buf     *bytes.Buffer = bytes.NewBuffer([]byte{})
 		tempBuf []byte        = make([]byte, 2048)
 	)
+
+	// Monitoring close connection
+	go func() {
+		for v := range b.GetEC() {
+			var _ struct{} = v
+			c.Close()
+		}
+	}()
 
 	for {
 		ln, err := c.Read(tempBuf)
