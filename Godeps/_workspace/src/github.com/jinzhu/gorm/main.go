@@ -130,7 +130,7 @@ func (s *DB) LogMode(enable bool) *DB {
 }
 
 func (s *DB) SingularTable(enable bool) {
-	modelStructs = map[reflect.Type]*ModelStruct{}
+	modelStructsMap = newModelStructsMap()
 	s.parent.singularTable = enable
 }
 
@@ -247,7 +247,7 @@ func (s *DB) FirstOrInit(out interface{}, where ...interface{}) *DB {
 		}
 		c.NewScope(out).inlineCondition(where...).initialize()
 	} else {
-		c.NewScope(out).updatedAttrsWithValues(convertInterfaceToMap(s.search.assignAttrs), false)
+		c.NewScope(out).updatedAttrsWithValues(convertInterfaceToMap(c.search.assignAttrs), false)
 	}
 	return c
 }
@@ -258,9 +258,9 @@ func (s *DB) FirstOrCreate(out interface{}, where ...interface{}) *DB {
 		if !result.RecordNotFound() {
 			return result
 		}
-		c.AddError(c.NewScope(out).inlineCondition(where...).initialize().callCallbacks(s.parent.callback.creates).db.Error)
+		c.AddError(c.NewScope(out).inlineCondition(where...).initialize().callCallbacks(c.parent.callback.creates).db.Error)
 	} else if len(c.search.assignAttrs) > 0 {
-		c.AddError(c.NewScope(out).InstanceSet("gorm:update_interface", s.search.assignAttrs).callCallbacks(s.parent.callback.updates).db.Error)
+		c.AddError(c.NewScope(out).InstanceSet("gorm:update_interface", c.search.assignAttrs).callCallbacks(c.parent.callback.updates).db.Error)
 	}
 	return c
 }
@@ -384,6 +384,10 @@ func (s *DB) CreateTable(values ...interface{}) *DB {
 func (s *DB) DropTable(values ...interface{}) *DB {
 	db := s.clone()
 	for _, value := range values {
+		if tableName, ok := value.(string); ok {
+			db = db.Table(tableName)
+		}
+
 		db = db.NewScope(value).dropTable().db
 	}
 	return db
@@ -392,6 +396,10 @@ func (s *DB) DropTable(values ...interface{}) *DB {
 func (s *DB) DropTableIfExists(values ...interface{}) *DB {
 	db := s.clone()
 	for _, value := range values {
+		if tableName, ok := value.(string); ok {
+			db = db.Table(tableName)
+		}
+
 		db = db.NewScope(value).dropTableIfExists().db
 	}
 	return db
@@ -426,7 +434,7 @@ func (s *DB) DropColumn(column string) *DB {
 }
 
 func (s *DB) AddIndex(indexName string, column ...string) *DB {
-	scope := s.clone().NewScope(s.Value)
+	scope := s.Unscoped().NewScope(s.Value)
 	scope.addIndex(false, indexName, column...)
 	return scope.db
 }
@@ -508,7 +516,7 @@ func (s *DB) SetJoinTableHandler(source interface{}, column string, handler Join
 	scope := s.NewScope(source)
 	for _, field := range scope.GetModelStruct().StructFields {
 		if field.Name == column || field.DBName == column {
-			if many2many := parseTagSetting(field.Tag.Get("gorm"))["MANY2MANY"]; many2many != "" {
+			if many2many := field.TagSettings["MANY2MANY"]; many2many != "" {
 				source := (&Scope{Value: source}).GetModelStruct().ModelType
 				destination := (&Scope{Value: reflect.New(field.Struct.Type).Interface()}).GetModelStruct().ModelType
 				handler.Setup(field.Relationship, many2many, source, destination)

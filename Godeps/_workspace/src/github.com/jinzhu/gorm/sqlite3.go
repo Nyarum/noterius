@@ -15,10 +15,13 @@ func (sqlite3) SqlTag(value reflect.Value, size int, autoIncrease bool) string {
 	case reflect.Bool:
 		return "bool"
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uintptr:
+		if autoIncrease {
+			return "integer primary key autoincrement"
+		}
 		return "integer"
 	case reflect.Int64, reflect.Uint64:
 		if autoIncrease {
-			return "integer"
+			return "integer primary key autoincrement"
 		}
 		return "bigint"
 	case reflect.Float32, reflect.Float64:
@@ -48,7 +51,7 @@ func (s sqlite3) HasTable(scope *Scope, tableName string) bool {
 
 func (s sqlite3) HasColumn(scope *Scope, tableName string, columnName string) bool {
 	var count int
-	s.RawScanInt(scope, &count, fmt.Sprintf("SELECT count(*) FROM sqlite_master WHERE tbl_name = ? AND (sql LIKE '%%(\"%v\" %%' OR sql LIKE '%%,\"%v\" %%' OR sql LIKE '%%( %v %%' OR sql LIKE '%%, %v %%');\n", columnName, columnName, columnName, columnName), tableName)
+	s.RawScanInt(scope, &count, fmt.Sprintf("SELECT count(*) FROM sqlite_master WHERE tbl_name = ? AND (sql LIKE '%%(\"%v\" %%' OR sql LIKE '%%,\"%v\" %%' OR sql LIKE '%%, \"%v\" %%' OR sql LIKE '%%( %v %%' OR sql LIKE '%%, %v %%' OR sql LIKE '%%,%v %%');\n", columnName, columnName, columnName, columnName, columnName, columnName), tableName)
 	return count > 0
 }
 

@@ -30,13 +30,61 @@ The fantastic ORM library for Golang, aims to be developer friendly.
 go get -u github.com/jinzhu/gorm
 ```
 
-## Documentation 
+## Table of Contents
 
-[![GoDoc](https://godoc.org/github.com/jinzhu/gorm?status.svg)](https://godoc.org/github.com/jinzhu/gorm)
-
-`go doc` format documentation for this project can be viewed online without
-installing the package by using the GoDoc page at:
-http://godoc.org/github.com/jinzhu/gorm
+- [Define Models (Structs)](#define-models-structs)
+- [Conventions](#conventions)
+- [Initialize Database](#initialize-database)
+- [Migration](#migration)
+- [Basic CRUD](#basic-crud)
+  - [Create](#create-record)
+  - [Query](#query)
+      - [Query With Where (Plain SQL)](#query-with-where-plain-sql)
+      - [Query With Where (Struct & Map)](#query-with-where-struct--map)
+      - [Query With Not](#query-with-not)
+      - [Query With Inline Condition](#query-with-inline-condition)
+      - [Query With Or](#query-with-or)
+      - [Query Chains](#query-chains)
+      - [Preloading (Eager loading)](#preloading-eager-loading)
+  - [Update](#update)
+      - [Update Without Callbacks](#update-without-callbacks)
+      - [Batch Updates](#batch-updates)
+      - [Update with SQL Expression](#update-with-sql-expression)
+  - [Delete](#delete)
+      - [Batch Delete](#batch-delete)
+      - [Soft Delete](#soft-delete)
+- [Associations](#associations)
+    - [Has One](#has-one)
+    - [Belongs To](#belongs-to)
+    - [Has Many](#has-many)
+    - [Many To Many](#many-to-many)
+    - [Polymorphism](#polymorphism)
+    - [Association Mode](#association-mode)
+- [Advanced Usage](#advanced-usage)
+	- [FirstOrInit](#firstorinit)
+	- [FirstOrCreate](#firstorcreate)
+	- [Select](#select)
+	- [Order](#order)
+	- [Limit](#limit)
+	- [Offset](#offset)
+	- [Count](#count)
+	- [Pluck](#pluck)
+	- [Raw SQL](#raw-sql)
+	- [Row & Rows](#row--rows)
+	- [Scan](#scan)
+	- [Group & Having](#group--having)
+	- [Joins](#joins)
+	- [Transactions](#transactions)
+	- [Scopes](#scopes)
+	- [Callbacks](#callbacks)
+	- [Specifying The Table Name](#specifying-the-table-name)
+	- [Error Handling](#error-handling)
+	- [Logger](#logger)
+	- [Existing Schema](#existing-schema)
+	- [Composite Primary Key](#composite-primary-key)
+	- [Database Indexes & Foreign Key](#database-indexes--foreign-key)
+	- [Default values](#default-values)
+	- [More examples with query chain](#more-examples-with-query-chain)
 
 ## Define Models (Structs)
 
@@ -51,11 +99,15 @@ type User struct {
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time
 
-	Emails            []Email         // One-To-Many relationship (has many)
-	BillingAddress    Address         // One-To-One relationship (has one)
-	BillingAddressID  sql.NullInt64   // Foreign key of BillingAddress
-	ShippingAddress   Address         // One-To-One relationship (has one)
-	ShippingAddressID int             // Foreign key of ShippingAddress
+	CreditCard        CreditCard      // One-To-One relationship (has one - use CreditCard's UserID as foreign key)
+	Emails            []Email         // One-To-Many relationship (has many - use Email's UserID as foreign key)
+
+	BillingAddress    Address         // One-To-One relationship (belongs to - use BillingAddressID as foreign key)
+	BillingAddressID  sql.NullInt64
+
+	ShippingAddress   Address         // One-To-One relationship (belongs to - use ShippingAddressID as foreign key)
+	ShippingAddressID int
+
 	IgnoreMe          int `sql:"-"`   // Ignore this field
 	Languages         []Language `gorm:"many2many:user_languages;"` // Many-To-Many relationship, 'user_languages' is join table
 }
@@ -78,6 +130,12 @@ type Language struct {
 	ID   int
 	Name string `sql:"index:idx_name_code"` // Create index with name, and will create combined index if find other fields defined same name
 	Code string `sql:"index:idx_name_code"` // `unique_index` also works
+}
+
+type CreditCard struct {
+	gorm.Model
+	UserID  uint
+	Number  string
 }
 ```
 
@@ -495,80 +553,80 @@ db.Unscoped().Delete(&order)
 ### Has One
 
 ```go
-// User has one address
-db.Model(&user).Related(&address)
-//// SELECT * FROM addresses WHERE id = 123; // 123 is user's foreign key AddressId
+// User has one CreditCard, UserID is the foreign key
+type User struct {
+	gorm.Model
+	CreditCard   CreditCard
+}
 
-// Specify the foreign key
-db.Model(&user).Related(&address1, "BillingAddressId")
-//// SELECT * FROM addresses WHERE id = 123; // 123 is user's foreign key BillingAddressId
+type CreditCard struct {
+	gorm.Model
+	UserID   uint
+	Number   string
+}
+
+var card CreditCard
+db.Model(&user).Related(&card, "CreditCard")
+//// SELECT * FROM credit_cards WHERE user_id = 123; // 123 is user's primary key
+// CreditCard is user's field name, it means get user's CreditCard relations and fill it into variable card
+// If the field name is same as the variable's type name, like above example, it could be omitted, like:
+db.Model(&user).Related(&creditCard, "CreditCard")
 ```
 
 ### Belongs To
 
 ```go
-// Email belongs to user
-db.Model(&email).Related(&user)
-//// SELECT * FROM users WHERE id = 111; // 111 is email's foreign key UserId
+// User belongs to a profile, ProfileID is the foreign key
+type User struct {
+	gorm.Model
+	Profile   Profile
+	ProfileID int
+}
 
-// Specify the foreign key
-db.Model(&email).Related(&user, "ProfileId")
-//// SELECT * FROM users WHERE id = 111; // 111 is email's foreign key ProfileId
+type Profile struct {
+	gorm.Model
+	Name   string
+}
+
+db.Model(&user).Related(&profile)
+//// SELECT * FROM profiles WHERE id = 111; // 111 is user's foreign key ProfileID
 ```
 
 ### Has Many
 
 ```go
-// User has many emails
-db.Model(&user).Related(&emails)
-//// SELECT * FROM emails WHERE user_id = 111;
-// user_id is the foreign key, 111 is user's primary key's value
+// User has many emails, UserID is the foreign key
+type User struct {
+	gorm.Model
+	Emails   []Email
+}
 
-// Specify the foreign key
-db.Model(&user).Related(&emails, "ProfileId")
-//// SELECT * FROM emails WHERE profile_id = 111;
-// profile_id is the foreign key, 111 is user's primary key's value
+type Email struct {
+	gorm.Model
+	Email   string
+	UserID  uint
+}
+
+db.Model(&user).Related(&emails)
+//// SELECT * FROM emails WHERE user_id = 111; // 111 is user's primary key
 ```
 
 ### Many To Many
 
 ```go
-// User has many languages and belongs to many languages
-db.Model(&user).Related(&languages, "Languages")
+// User has and belongs to many languages, use `user_languages` as join table
+type User struct {
+	gorm.Model
+	Languages         []Language `gorm:"many2many:user_languages;"`
+}
+
+type Language struct {
+	gorm.Model
+	Name string
+}
+
+db.Model(&user).Related(&languages)
 //// SELECT * FROM "languages" INNER JOIN "user_languages" ON "user_languages"."language_id" = "languages"."id" WHERE "user_languages"."user_id" = 111
-// `Languages` is user's column name, this column's tag defined join table like this `gorm:"many2many:user_languages;"`
-```
-
-There is also a mode used to handle many to many relations easily
-
-```go
-// Query
-db.Model(&user).Association("Languages").Find(&languages)
-// same as `db.Model(&user).Related(&languages, "Languages")`
-
-db.Where("name = ?", "ZH").First(&languageZH)
-db.Where("name = ?", "EN").First(&languageEN)
-
-// Append
-db.Model(&user).Association("Languages").Append([]Language{languageZH, languageEN})
-db.Model(&user).Association("Languages").Append([]Language{{Name: "DE"}})
-db.Model(&user).Association("Languages").Append(Language{Name: "DE"})
-
-// Delete
-db.Model(&user).Association("Languages").Delete([]Language{languageZH, languageEN})
-db.Model(&user).Association("Languages").Delete(languageZH, languageEN)
-
-// Replace
-db.Model(&user).Association("Languages").Replace([]Language{languageZH, languageEN})
-db.Model(&user).Association("Languages").Replace(Language{Name: "DE"}, languageEN)
-
-// Count
-db.Model(&user).Association("Languages").Count()
-// Return the count of languages the user has
-
-// Clear
-db.Model(&user).Association("Languages").Clear()
-// Remove all relations between the user and languages
 ```
 
 ### Polymorphism
@@ -596,6 +654,47 @@ Supports polymorphic has-many and has-one associations.
   }
 ```
 Note: polymorphic belongs-to and many-to-many are explicitly NOT supported, and will throw errors.
+
+## Association Mode
+
+Association Mode contains some helper methods to handle relationship things easily.
+
+```go
+// Start Association Mode
+var user User
+db.Model(&user).Association("Languages")
+// `user` is the source, it need to be a valid record (contains primary key)
+// `Languages` is source's field name for a relationship.
+// If those conditions not matched, will return an error, check it with:
+// db.Model(&user).Association("Languages").Error
+
+
+// Query - Find out all related associations
+db.Model(&user).Association("Languages").Find(&languages)
+
+
+// Append - Append new associations for many2many, has_many, will replace current association for has_one, belongs_to
+db.Model(&user).Association("Languages").Append([]Language{languageZH, languageEN})
+db.Model(&user).Association("Languages").Append(Language{Name: "DE"})
+
+
+// Delete - Remove relationship between source & passed arguments, won't delete those arguments
+db.Model(&user).Association("Languages").Delete([]Language{languageZH, languageEN})
+db.Model(&user).Association("Languages").Delete(languageZH, languageEN)
+
+
+// Replace - Replace current associations with new one
+db.Model(&user).Association("Languages").Replace([]Language{languageZH, languageEN})
+db.Model(&user).Association("Languages").Replace(Language{Name: "DE"}, languageEN)
+
+
+// Count - Return the count of current associations
+db.Model(&user).Association("Languages").Count()
+
+
+// Clear - Remove relationship between source & current associations, won't delete those associations
+db.Model(&user).Association("Languages").Clear()
+```
 
 ## Advanced Usage
 
@@ -1009,10 +1108,10 @@ func (u *User) AfterCreate() (err error) {
 }
 ```
 
-As you know, save/delete operations in gorm are running in a transaction,
-This is means if changes made in the transaction is not visiable unless it is commited,
-So if you want to use those changes in your callbacks, you need to run SQL in same transaction.
-Fortunately, gorm support pass transaction to callbacks as you needed, you could do it like this:
+Save/delete operations in gorm are running in a transaction.  
+Changes made in that transaction are not visible unless it is commited.
+So if you want to use those changes in your callbacks, you need to run your SQL in the same transaction.
+For this Gorm supports passing transactions to callbacks like this:
 
 ```go
 func (u *User) AfterCreate(tx *gorm.DB) (err error) {
@@ -1162,7 +1261,15 @@ db.Model(&User{}).RemoveIndex("idx_user_name")
 
 ## Default values
 
-If you have defined a default value in the `sql` tag (see the struct Animal above) the generated create/update SQl will ignore these fields if is set blank data.
+```go
+type Animal struct {
+	ID   int64
+	Name string `sql:"default:'galeone'"`
+	Age  int64
+}
+```
+
+If you have defined a default value in the `sql` tag, the generated create SQL will ignore these fields if it is blank.
 
 Eg.
 
@@ -1170,7 +1277,7 @@ Eg.
 db.Create(&Animal{Age: 99, Name: ""})
 ```
 
-The generated query will be:
+The generated SQL will be:
 
 ```sql
 INSERT INTO animals("age") values('99');
@@ -1217,6 +1324,14 @@ db.Where("email = ?", "x@example.org").Attrs(User{RegisteredIp: "111.111.111.111
 //// INSERT INTO "users" (email,registered_ip) VALUES ("x@example.org", "111.111.111.111")  // if record not found
 ```
 
+## Documentation
+
+[![GoDoc](https://godoc.org/github.com/jinzhu/gorm?status.svg)](https://godoc.org/github.com/jinzhu/gorm)
+
+`go doc` format documentation for this project can be viewed online without
+installing the package by using the GoDoc page at:
+http://godoc.org/github.com/jinzhu/gorm
+
 ## TODO
 * Github Pages
 
@@ -1228,8 +1343,10 @@ db.Where("email = ?", "x@example.org").Attrs(User{RegisteredIp: "111.111.111.111
 * <wosmvp@gmail.com>
 * <http://twitter.com/zhangjinzhu>
 
+# Contributors
+
+https://github.com/jinzhu/gorm/graphs/contributors
+
 ## License
 
 Released under the [MIT License](https://github.com/jinzhu/gorm/blob/master/License).
-
-[![GoDoc](https://godoc.org/github.com/jinzhu/gorm?status.png)](http://godoc.org/github.com/jinzhu/gorm)

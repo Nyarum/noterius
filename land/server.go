@@ -1,7 +1,11 @@
 package land
 
 import (
+	"bytes"
+	"fmt"
+
 	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/packet"
 	"github.com/Nyarum/noterius/robot"
 	log "github.com/Sirupsen/logrus"
 
@@ -14,6 +18,40 @@ type Application struct {
 	Database core.Database
 }
 
+// ClientLive method for accept new connection from socket
+func ConnectHandler(buffers core.Buffers, conf core.Config, c net.Conn) {
+	defer core.ErrorNetworkHandler(c)
+
+	buffer := bytes.NewBuffer([]byte{})
+	//player := entitie.NewPlayer(c)
+	packetAlloc := packet.NewPacket()
+
+	packet, err := packetAlloc.Encode(940)
+	if err != nil {
+		log.WithError(err).Error("Error in pill encrypt")
+	}
+
+	buffers.GetWC() <- packet
+
+	for getBytes := range buffers.GetRC() {
+		buffer.Reset()
+		buffer.Write(getBytes)
+
+		log.WithField("bytes", fmt.Sprintf("% x", buffer.Bytes())).Info("Print message from client")
+
+		if buffer.Len() <= 2 {
+			buffers.GetWC() <- []byte{0x00, 0x02}
+			continue
+		}
+
+		err := packetAlloc.Decode(buffer.Bytes())
+		if err != nil {
+			log.WithError(err).Error("Error in pill decrypt")
+			return
+		}
+	}
+}
+
 // Run method for starting server
 func (a *Application) Run() (err error) {
 	listen, err := net.Listen("tcp", a.Config.Base.IP+":"+a.Config.Base.Port)
@@ -21,6 +59,7 @@ func (a *Application) Run() (err error) {
 		return
 	}
 
+	// Init robot factories
 	robot := robot.NewRobot()
 	for _, factory := range robot.Factories {
 		go factory.Process(a.Config)
@@ -34,11 +73,10 @@ func (a *Application) Run() (err error) {
 		}
 
 		go func(c net.Conn, conf core.Config) {
-			var buffers *Buffers = NewBuffers()
+			var buffers *core.Buffers = core.NewBuffers()
 
 			defer func() {
-				close(buffers.GetReadChannel())
-				close(buffers.GetWriteChannel())
+				buffers.Close()
 				core.ErrorNetworkHandler(c)
 			}()
 
@@ -46,10 +84,10 @@ func (a *Application) Run() (err error) {
 				"address": c.RemoteAddr(),
 			}).Info("Client is connected")
 
-			go ClientLive(*buffers, conf, c)
+			go buffers.ReadHandler(c, conf)
 			go buffers.WriteHandler(c)
 
-			buffers.ReadHandler(c, conf)
+			ConnectHandler(*buffers, conf, c)
 		}(client, a.Config)
 	}
 }
