@@ -6,7 +6,6 @@ import (
 
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
-	log "github.com/Sirupsen/logrus"
 )
 
 func init() {
@@ -59,8 +58,6 @@ func (i *IncomingAuth) Packet() (func(netes network.Netes), func(player *entitie
 	}
 
 	process := func(player *entitie.Player) {
-		log.Info("Packet auth")
-
 		player.Stats.Name = i.Login
 
 		return
@@ -91,8 +88,6 @@ func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func(player *
 	}
 
 	process := func(player *entitie.Player) {
-		log.Info("Packet characters")
-
 		return
 	}
 
@@ -108,8 +103,6 @@ func (i *IncomingExit) Packet() (func(netes network.Netes), func(player *entitie
 	}
 
 	process := func(player *entitie.Player) {
-		log.Info("Packet exit")
-
 		player.Buffers.GetEC() <- struct{}{}
 
 		return
