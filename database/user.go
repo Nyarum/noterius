@@ -1,21 +1,11 @@
 package database
 
-import (
-	"time"
-)
-
 type User struct {
-	Id          int64
-	Login       string
-	Password    string
-	CharacterId int64
-	Characters  []Character
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Database
 }
 
-func NewUser() *User {
-	return &User{}
+func NewUser(db Database) *User {
+	return &User{Database: db}
 }
 
 func (u *User) Get() (*User, error) {

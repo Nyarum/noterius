@@ -1,19 +1,11 @@
 package database
 
-import (
-	"time"
-)
-
 type Character struct {
-	Id        int64
-	Name      string
-	Level     int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Database
 }
 
-func NewCharacter() *Character {
-	return &Character{}
+func NewCharacter(db Database) *Character {
+	return &Character{Database: db}
 }
 
 func (c *Character) Get() (*Character, error) {

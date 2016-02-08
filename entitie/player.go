@@ -1,12 +1,17 @@
 package entitie
 
-import "github.com/Nyarum/noterius/core"
+import (
+	"time"
+
+	"github.com/Nyarum/noterius/core"
+)
 
 type Player struct {
-	Stats    Stats
-	Position Position
-
-	Buffers *core.Buffers
+	Login     string
+	Character []Character
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Buffers   *core.Buffers
 }
 
 func NewPlayer(buffers *core.Buffers) *Player {

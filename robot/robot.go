@@ -13,7 +13,7 @@ type Robot struct {
 func NewRobot() *Robot {
 	return &Robot{
 		Factories: []RobotFactory{
-			&Database{},
+			NewDatabase(),
 		},
 	}
 }
