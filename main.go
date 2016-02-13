@@ -29,9 +29,10 @@ func main() {
 	}
 
 	log.Info("Loading database..")
-	if app.Database, err = core.NewDatabase(&app.Config); err != nil {
+	if app.DatabaseInfo, err = core.NewDatabaseInfo(&app.Config); err != nil {
 		log.WithError(err).Panic("Database is not load")
 	}
+	defer app.DatabaseInfo.DB.Close()
 
 	log.WithField("address", app.Config.Base.IP+":"+app.Config.Base.Port).Info("Server starting")
 	if err := app.Run(); err != nil {

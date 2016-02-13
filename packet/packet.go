@@ -5,13 +5,15 @@ import (
 
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
+	"github.com/Nyarum/noterius/manager"
 )
 
-type PacketFactory func() (func(network.Netes), func(*entitie.Player))
+type PacketFactory func(*manager.Manager) (func(network.Netes), func(*entitie.Player) []int)
 
 type Packet struct {
-	pills  map[int]PacketFactory
-	Player *entitie.Player
+	pills   map[int]PacketFactory
+	Player  *entitie.Player
+	Manager *manager.Manager
 }
 
 type PacketHeader struct {
@@ -20,7 +22,7 @@ type PacketHeader struct {
 	Opcode   uint16
 }
 
-func NewPacket(player *entitie.Player) *Packet {
+func NewPacket(player *entitie.Player, manager *manager.Manager) *Packet {
 	return &Packet{
 		pills: map[int]PacketFactory{
 			431: (*IncomingAuth)(&IncomingAuth{}).Packet,
@@ -49,7 +51,7 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 		return nil, err
 	}
 
-	handler, process := pck()
+	handler, process := pck(p.Manager)
 
 	process(p.Player)
 	handler(netes)
@@ -72,7 +74,7 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 	return netes.Bytes(), nil
 }
 
-func (p *Packet) Decode(buf []byte) error {
+func (p *Packet) Decode(buf []byte) ([]int, error) {
 	var (
 		header PacketHeader    = PacketHeader{}
 		netes  *network.Parser = network.NewParser(buf)
@@ -84,18 +86,18 @@ func (p *Packet) Decode(buf []byte) error {
 
 	pck, err := p.GetPck(int(header.Opcode))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	handler, process := pck()
+	handler, process := pck(p.Manager)
 
 	handler(netes)
-	process(p.Player)
+	opcodes := process(p.Player)
 
 	err = netes.Error()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return opcodes, nil
 }

@@ -3,34 +3,41 @@
 	"GoVersion": "go1.5",
 	"Deps": [
 		{
+			"ImportPath": "github.com/Nyarum/migrations",
+			"Comment": "v1.0.2-2-g485e3e2",
+			"Rev": "485e3e2718b692b4556f165954936cb482f2a57f"
+		},
+		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7-53-g446d1c1",
-			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
+			"Comment": "v0.8.7-37-g6f383a9",
+			"Rev": "6f383a9b2998dd6f401704269c3e6e192f6175ad"
 		},
 		{
-			"ImportPath": "github.com/apex/log",
-			"Rev": "81a19e5c0054c0c0e546333bfc4eed40b5b9592f"
+			"ImportPath": "github.com/go-pg/migrations",
+			"Comment": "v1.0.2",
+			"Rev": "46d7d7bedf7f78117e5fa8b7e0d9503acca8e141"
 		},
 		{
-			"ImportPath": "github.com/jinzhu/gorm",
-			"Rev": "9739cb853cbfb312fb0e20c7643588004cb50e4d"
+			"ImportPath": "github.com/golang/glog",
+			"Rev": "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 		},
 		{
-			"ImportPath": "github.com/jinzhu/inflection",
-			"Rev": "3272df6c21d04180007eb3349844c89a3856bc25"
+			"ImportPath": "gopkg.in/bsm/ratelimit.v1",
+			"Rev": "f14ad9c78b155f69b480cfa41cb655259baac260"
 		},
 		{
-			"ImportPath": "github.com/lib/pq",
-			"Comment": "go1.0-cutoff-74-g8ad2b29",
-			"Rev": "8ad2b298cadd691a77015666a5372eae5dbfac8f"
+			"ImportPath": "gopkg.in/bufio.v1",
+			"Comment": "v1",
+			"Rev": "567b2bfa514e796916c4747494d6ff5132a1dfce"
 		},
 		{
-			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
+			"ImportPath": "gopkg.in/pg.v3",
+			"Comment": "v3.5.6",
+			"Rev": "76e63febeb3f6a6573bd21ca64c4a141c04905b3"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "f7716cbe52baa25d2e9b0d0da546fcf909fc16b4"
+			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
 		}
 	]
 }

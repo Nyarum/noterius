@@ -1,19 +1,27 @@
 package manager
 
-type Manager struct{}
+import "github.com/Nyarum/noterius/database"
 
-func NewManager() *Manager {
-	return &Manager{}
+const (
+	CACHE = iota
+	DATABASE
+)
+
+type Manager struct {
+	*database.Database
 }
 
-func (m *Manager) Player() *ManagerPlayer {
-	return NewManagerPlayer()
+func NewManager(database *database.Database) *Manager {
+	return &Manager{Database: database}
 }
 
-func (m *Manager) Monster() *ManagerMonster {
-	return NewManagerMonster()
-}
+func (m *Manager) Player(storage int) ManagerPlayer {
+	switch storage {
+	case CACHE:
+		return NewManagerPlayerCache(m)
+	case DATABASE:
+		return NewManagerPlayerDatabase(m)
+	}
 
-func (m *Manager) NPC() *ManagerNPC {
-	return NewManagerNPC()
+	return nil
 }

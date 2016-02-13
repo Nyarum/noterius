@@ -6,24 +6,25 @@ import (
 
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
+	"github.com/Nyarum/noterius/manager"
 )
 
 type OutcomingDate struct {
 	Time string
 }
 
-func (i *OutcomingDate) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
+func (i *OutcomingDate) Packet(mgr *manager.Manager) (func(netes network.Netes), func(player *entitie.Player) []int) {
 	handler := func(netes network.Netes) {
 		netes.WriteString(i.Time)
 
 		return
 	}
 
-	process := func(player *entitie.Player) {
+	process := func(player *entitie.Player) []int {
 		timeNow := time.Now()
 		i.Time = fmt.Sprintf("[%d-%d %d:%d:%d:%d]", timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), timeNow.Second(), timeNow.Nanosecond()/1000000)
 
-		return
+		return nil
 	}
 
 	return handler, process
@@ -38,7 +39,7 @@ type IncomingAuth struct {
 	ClientVersion uint16
 }
 
-func (i *IncomingAuth) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
+func (i *IncomingAuth) Packet(mgr *manager.Manager) (func(netes network.Netes), func(player *entitie.Player) []int) {
 	handler := func(netes network.Netes) {
 		netes.ReadString(&i.Key)
 		netes.ReadString(&i.Login)
@@ -50,10 +51,13 @@ func (i *IncomingAuth) Packet() (func(netes network.Netes), func(player *entitie
 		return
 	}
 
-	process := func(player *entitie.Player) {
+	process := func(player *entitie.Player) []int {
 		player.Stats.Name = i.Login
 
-		return
+		// Test manager
+		mgr.Player(manager.CACHE).Save(*player)
+
+		return []int{931}
 	}
 
 	return handler, process
@@ -68,7 +72,7 @@ type OutcomingCharacters struct {
 	DwFlag     uint32
 }
 
-func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
+func (i *OutcomingCharacters) Packet(mgr *manager.Manager) (func(netes network.Netes), func(player *entitie.Player) []int) {
 	handler := func(netes network.Netes) {
 		netes.WriteUint16(uint16(0))
 		netes.WriteBytes([]byte{0x00, 0x08, 0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49})
@@ -80,8 +84,8 @@ func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func(player *
 		return
 	}
 
-	process := func(player *entitie.Player) {
-		return
+	process := func(player *entitie.Player) []int {
+		return nil
 	}
 
 	return handler, process
@@ -90,15 +94,15 @@ func (i *OutcomingCharacters) Packet() (func(netes network.Netes), func(player *
 type IncomingExit struct {
 }
 
-func (i *IncomingExit) Packet() (func(netes network.Netes), func(player *entitie.Player)) {
+func (i *IncomingExit) Packet(mgr *manager.Manager) (func(netes network.Netes), func(player *entitie.Player) []int) {
 	handler := func(netes network.Netes) {
 		return
 	}
 
-	process := func(player *entitie.Player) {
+	process := func(player *entitie.Player) []int {
 		player.Buffers.GetEC() <- struct{}{}
 
-		return
+		return nil
 	}
 
 	return handler, process
