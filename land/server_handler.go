@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/Nyarum/noterius/core"
 	"github.com/Nyarum/noterius/database"
 	"github.com/Nyarum/noterius/entitie"
-	"github.com/Nyarum/noterius/manager"
 	"github.com/Nyarum/noterius/packet"
 	log "github.com/Sirupsen/logrus"
 )
@@ -21,12 +21,11 @@ func ConnectHandler(buffers *core.Buffers, app Application, c net.Conn) {
 		buffer      *bytes.Buffer      = bytes.NewBuffer([]byte{})
 		player      *entitie.Player    = entitie.NewPlayer(buffers)
 		database    *database.Database = database.NewDatabase(&app.DatabaseInfo)
-		manager     *manager.Manager   = manager.NewManager(database)
-		packetAlloc *packet.Packet     = packet.NewPacket(player, manager)
+		packetAlloc *packet.Packet     = packet.NewPacket(player, database)
 	)
 
 	// Once send first a packet
-	packet, err := packetAlloc.Encode(940)
+	packet, err := packetAlloc.Encode(packet.OP_DATE)
 	if err != nil {
 		log.WithError(err).Error("Error in packet encode")
 	}
@@ -63,6 +62,14 @@ func ConnectHandler(buffers *core.Buffers, app Application, c net.Conn) {
 			}
 
 			buffers.GetWC() <- response
+		}
+
+		if player.Error != nil {
+			// Before disconnect
+			time.Sleep(time.Second)
+
+			log.WithError(player.Error).Error("Client was rejected by God!")
+			return
 		}
 	}
 }

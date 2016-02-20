@@ -3,17 +3,17 @@ package packet
 import (
 	"errors"
 
+	"github.com/Nyarum/noterius/database"
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
-	"github.com/Nyarum/noterius/manager"
 )
 
-type PacketFactory func(*manager.Manager) (func(network.Netes), func(*entitie.Player) []int)
+type PacketFactory func(*database.Database) (func(network.Netes), func(*entitie.Player) []int)
 
 type Packet struct {
-	pills   map[int]PacketFactory
-	Player  *entitie.Player
-	Manager *manager.Manager
+	pills    map[int]PacketFactory
+	Player   *entitie.Player
+	Database *database.Database
 }
 
 type PacketHeader struct {
@@ -22,15 +22,16 @@ type PacketHeader struct {
 	Opcode   uint16
 }
 
-func NewPacket(player *entitie.Player, manager *manager.Manager) *Packet {
+func NewPacket(player *entitie.Player, database *database.Database) *Packet {
 	return &Packet{
 		pills: map[int]PacketFactory{
-			431: (*IncomingAuth)(&IncomingAuth{}).Packet,
-			432: (*IncomingExit)(&IncomingExit{}).Packet,
-			931: (*OutcomingCharacters)(&OutcomingCharacters{}).Packet,
-			940: (*OutcomingDate)(&OutcomingDate{}).Packet,
+			OP_AUTH:       (*IncomingAuth)(&IncomingAuth{}).Packet,
+			OP_EXIT:       (*IncomingExit)(&IncomingExit{}).Packet,
+			OP_CHARACTERS: (*OutcomingCharacters)(&OutcomingCharacters{}).Packet,
+			OP_DATE:       (*OutcomingDate)(&OutcomingDate{}).Packet,
 		},
-		Player: player,
+		Player:   player,
+		Database: database,
 	}
 }
 
@@ -51,10 +52,15 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 		return nil, err
 	}
 
-	handler, process := pck(p.Manager)
+	handler, process := pck(p.Database)
 
 	process(p.Player)
+
 	handler(netes)
+	err = netes.Error()
+	if err != nil {
+		return nil, err
+	}
 
 	data := string(netes.Bytes())
 	netes.Reset()
@@ -65,11 +71,6 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 	netes.SetEndian(network.BigEndian).WriteUint32(header.UniqueId)
 	netes.SetEndian(network.LittleEndian).WriteUint16(header.Opcode)
 	netes.WriteBytes([]byte(data))
-
-	err = netes.Error()
-	if err != nil {
-		return nil, err
-	}
 
 	return netes.Bytes(), nil
 }
@@ -89,15 +90,15 @@ func (p *Packet) Decode(buf []byte) ([]int, error) {
 		return nil, err
 	}
 
-	handler, process := pck(p.Manager)
+	handler, process := pck(p.Database)
 
 	handler(netes)
-	opcodes := process(p.Player)
-
 	err = netes.Error()
 	if err != nil {
 		return nil, err
 	}
+
+	opcodes := process(p.Player)
 
 	return opcodes, nil
 }
