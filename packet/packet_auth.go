@@ -114,22 +114,6 @@ type CharacterLook struct {
 	Items     [10]struct {
 		Id   uint16
 		Pass [160]byte
-		/* In future
-		Num        uint16
-		Endure     uint16
-		MaxEndure  uint16
-		Energy     uint16
-		MaxEnergy  uint16
-		ForgeLv    uint8
-		Valid      bool
-		CheckNext1 uint8
-		DbParam    [2]uint32
-		CheckNext2 uint8
-		Attrs      [5]struct {
-			Id    uint16
-			Value uint16
-		}
-		*/
 	}
 	Hair uint16
 }

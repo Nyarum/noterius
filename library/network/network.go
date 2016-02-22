@@ -469,5 +469,13 @@ func (p *Parser) WriteBytes(value []byte) *Parser {
 }
 
 func (p *Parser) WriteBool(value bool) *Parser {
+	var boolValue uint8 = 0
+
+	if value {
+		boolValue = 1
+	}
+
+	p.WriteUint8(boolValue)
+
 	return p
 }
