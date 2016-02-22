@@ -1,4 +1,4 @@
-FROM golang:1.5.1
+FROM golang:1.6
 
 VOLUME ["/go/src/github.com/Nyarum/noterius"]
 

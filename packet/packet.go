@@ -2,11 +2,13 @@ package packet
 
 import (
 	"errors"
+	"time"
 
 	"github.com/Nyarum/noterius/database"
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
 	"github.com/Nyarum/noterius/support"
+	log "github.com/Sirupsen/logrus"
 )
 
 type PacketFactory interface {
@@ -54,6 +56,7 @@ func (p *Packet) GetPck(opcode int) (PacketFactory, error) {
 }
 
 func (p *Packet) Encode(opcode int) ([]byte, error) {
+	start := time.Now()
 	netes := network.NewParser([]byte{})
 
 	pck, err := p.GetPck(opcode)
@@ -80,6 +83,8 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 	netes.SetEndian(network.BigEndian).WriteUint32(header.UniqueId)
 	netes.SetEndian(network.LittleEndian).WriteUint16(header.Opcode)
 	netes.WriteBytes([]byte(data))
+
+	log.Info("Elapled time in Encode function: ", time.Since(start))
 
 	return netes.Bytes(), nil
 }
