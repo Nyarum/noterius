@@ -1,6 +1,9 @@
 package entitie
 
-import "github.com/Nyarum/noterius/core"
+import (
+	"github.com/Nyarum/noterius/core"
+	"github.com/Nyarum/noterius/support"
+)
 
 type Player struct {
 	ID       int64
@@ -8,7 +11,7 @@ type Player struct {
 	Position Position
 
 	Buffers *core.Buffers
-	Error   error
+	Error   *support.CustomError
 	Time    string
 }
 

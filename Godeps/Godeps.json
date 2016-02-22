@@ -13,9 +13,8 @@
 			"Rev": "6f383a9b2998dd6f401704269c3e6e192f6175ad"
 		},
 		{
-			"ImportPath": "github.com/go-pg/migrations",
-			"Comment": "v1.0.2",
-			"Rev": "46d7d7bedf7f78117e5fa8b7e0d9503acca8e141"
+			"ImportPath": "github.com/aglyzov/charmap",
+			"Rev": "945fb53710f223e44f612314a1d589532c81225c"
 		},
 		{
 			"ImportPath": "github.com/golang/glog",

@@ -10,6 +10,7 @@ import (
 	"github.com/Nyarum/noterius/database"
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/packet"
+	"github.com/Nyarum/noterius/support"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -25,7 +26,7 @@ func ConnectHandler(buffers *core.Buffers, app Application, c net.Conn) {
 	)
 
 	// Once send first a packet
-	packet, err := packetAlloc.Encode(packet.OP_DATE)
+	packet, err := packetAlloc.Encode(support.OP_SERVER_CHAPSTR)
 	if err != nil {
 		log.WithError(err).Error("Error in packet encode")
 	}

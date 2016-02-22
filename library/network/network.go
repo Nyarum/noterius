@@ -252,6 +252,18 @@ func (p *Parser) ReadBytes(value *[]byte, ln int) *Parser {
 	return p
 }
 
+func (p *Parser) ReadArray(value *[]byte, ln int) *Parser {
+	bufBytes := make([]byte, ln)
+	if bufBytes = p.buffer.Next(int(ln)); len(bufBytes) < int(ln) {
+		p.err = errors.New("Not enough bytes in buffer")
+		return p
+	}
+
+	(*value) = bufBytes
+
+	return p
+}
+
 func (p *Parser) ReadBool(value *bool) *Parser {
 	return p
 }

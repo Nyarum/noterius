@@ -6,9 +6,12 @@ import (
 	"github.com/Nyarum/noterius/database"
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/network"
+	"github.com/Nyarum/noterius/support"
 )
 
-type PacketFactory func(*database.Database) (func(network.Netes), func(*entitie.Player) []int)
+type PacketFactory interface {
+	Packet(*database.Database) (func(network.Netes), func(*entitie.Player) []int)
+}
 
 type Packet struct {
 	pills    map[int]PacketFactory
@@ -25,10 +28,16 @@ type PacketHeader struct {
 func NewPacket(player *entitie.Player, database *database.Database) *Packet {
 	return &Packet{
 		pills: map[int]PacketFactory{
-			OP_AUTH:       (*IncomingAuth)(&IncomingAuth{}).Packet,
-			OP_EXIT:       (*IncomingExit)(&IncomingExit{}).Packet,
-			OP_CHARACTERS: (*OutcomingCharacters)(&OutcomingCharacters{}).Packet,
-			OP_DATE:       (*OutcomingDate)(&OutcomingDate{}).Packet,
+			support.OP_CLIENT_LOGIN:            &IncomingAuth{},
+			support.OP_CLIENT_LOGOUT:           &IncomingExit{},
+			support.OP_SERVER_LOGIN:            &OutcomingAuth{},
+			support.OP_SERVER_CHAPSTR:          &OutcomingDate{},
+			support.OP_CLIENT_DELCHA:           &IncomingDeleteCharacter{},
+			support.OP_SERVER_DELCHA:           &OutcomingDeleteCharacter{},
+			support.OP_CLIENT_UPDATE_PASSWORD2: &IncomingUpdatePassword{},
+			support.OP_SERVER_UPDATE_PASSWORD2: &OutcomingUpdatePassword{},
+			support.OP_CLIENT_NEWCHA:           &IncomingNewCharacter{},
+			support.OP_SERVER_NEWCHA:           &OutcomingNewCharacter{},
 		},
 		Player:   player,
 		Database: database,
@@ -38,7 +47,7 @@ func NewPacket(player *entitie.Player, database *database.Database) *Packet {
 func (p *Packet) GetPck(opcode int) (PacketFactory, error) {
 	get, ok := p.pills[opcode]
 	if !ok {
-		return nil, errors.New("Pill is not found")
+		return nil, errors.New("Packet is not found")
 	}
 
 	return get, nil
@@ -52,7 +61,7 @@ func (p *Packet) Encode(opcode int) ([]byte, error) {
 		return nil, err
 	}
 
-	handler, process := pck(p.Database)
+	handler, process := pck.Packet(p.Database)
 
 	process(p.Player)
 
@@ -90,7 +99,7 @@ func (p *Packet) Decode(buf []byte) ([]int, error) {
 		return nil, err
 	}
 
-	handler, process := pck(p.Database)
+	handler, process := pck.Packet(p.Database)
 
 	handler(netes)
 	err = netes.Error()

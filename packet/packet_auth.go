@@ -9,6 +9,7 @@ import (
 	"github.com/Nyarum/noterius/entitie"
 	"github.com/Nyarum/noterius/library/crypt"
 	"github.com/Nyarum/noterius/library/network"
+	"github.com/Nyarum/noterius/support"
 )
 
 type OutcomingDate struct {
@@ -66,89 +67,133 @@ func (i *IncomingAuth) Packet(db *database.Database) (func(netes network.Netes),
 
 		user, err := db.User().GetByName(i.Login)
 		if err != nil {
-			player.Error = PlayerIsNotFound
+			player.Error = &support.PlayerIsNotFound
 
-			return []int{OP_CHARACTERS}
+			return []int{support.OP_SERVER_LOGIN}
 		}
 
 		encryptPassword, err := crypt.EncryptPassword(strings.ToUpper(user.Password[:24]), player.Time)
 		if err != nil {
-			player.Error = err
+			player.Error = &support.CustomError{0, err}
 
-			return []int{OP_CHARACTERS}
+			return []int{support.OP_SERVER_LOGIN}
 		}
 
 		if encryptPassword != i.Password {
-			player.Error = PasswordIncorrect
+			player.Error = &support.PasswordIncorrect
 
-			return []int{OP_CHARACTERS}
+			return []int{support.OP_SERVER_LOGIN}
 		}
 
 		if user.IsActive {
-			player.Error = PlayerInGame
+			player.Error = &support.PlayerInGame
 
-			return []int{OP_CHARACTERS}
+			return []int{support.OP_SERVER_LOGIN}
 		}
 
 		user.IsActive = true
 		err = user.Update(user.ID)
 		if err != nil {
-			player.Error = err
+			player.Error = &support.CustomError{0, err}
 
-			return []int{OP_CHARACTERS}
+			return []int{support.OP_SERVER_LOGIN}
 		}
 
 		player.ID = user.ID
 
-		return []int{OP_CHARACTERS}
+		return []int{support.OP_SERVER_LOGIN}
 	}
 
 	return handler, process
 }
 
-type OutcomingCharacters struct {
+type CharacterLook struct {
+	SynType   uint8
+	Race      uint16
+	BoatCheck uint8
+	Items     [10]struct {
+		Id   uint16
+		Pass [160]byte
+		/* In future
+		Num        uint16
+		Endure     uint16
+		MaxEndure  uint16
+		Energy     uint16
+		MaxEnergy  uint16
+		ForgeLv    uint8
+		Valid      bool
+		CheckNext1 uint8
+		DbParam    [2]uint32
+		CheckNext2 uint8
+		Attrs      [5]struct {
+			Id    uint16
+			Value uint16
+		}
+		*/
+	}
+	Hair uint16
+}
+
+type Character struct {
+	Flag  uint8
+	Name  string
+	Job   string
+	Level uint16
+	Look  CharacterLook
+}
+
+type OutcomingAuth struct {
 	ErrorCode  uint16
 	Key        []byte
-	Flag       uint8
-	Characters []struct {
-		Flag  uint8
-		Name  string
-		Job   string
-		Level uint16
-		Look  struct {
-			SynType   uint8
-			Race      uint16
-			BoatCheck uint8
-			Items     [10]struct {
-				Id         uint16
-				Num        uint16
-				Endure     uint16
-				MaxEndure  uint16
-				Energy     uint16
-				MaxEnergy  uint16
-				ForgeLv    uint8
-				Valid      bool
-				CheckNext1 uint8
-				DbParam    [2]uint32
-				CheckNext2 uint8
-				Attrs      [5]struct {
-					Id    uint16
-					Value uint16
-				}
-			}
-			Hair uint16
-		}
-	}
+	Characters []Character
 	Pincode    uint8
 	Encryption uint32
 	DwFlag     uint32
 }
 
-func (i *OutcomingCharacters) Packet(db *database.Database) (func(netes network.Netes), func(player *entitie.Player) []int) {
+func (i *OutcomingAuth) Packet(db *database.Database) (func(netes network.Netes), func(player *entitie.Player) []int) {
 	handler := func(netes network.Netes) {
 		netes.WriteUint16(i.ErrorCode)
 		netes.WriteBytes(i.Key)
-		netes.WriteUint8(i.Flag)
+
+		netes.WriteUint8(uint8(len(i.Characters)))
+		for _, character := range i.Characters {
+			netes.WriteUint8(character.Flag)
+			netes.WriteString(character.Name)
+			netes.WriteString(character.Job)
+			netes.WriteUint16(character.Level)
+
+			netes.WriteUint16(uint16(1626))
+			netes.WriteUint8(character.Look.SynType)
+			netes.WriteUint16(character.Look.Race)
+			netes.WriteUint8(character.Look.BoatCheck)
+
+			for _, item := range character.Look.Items {
+				netes.WriteUint16(item.Id)
+				netes.WriteBytes(item.Pass[:])
+				/*
+					netes.WriteUint16(item.Num)
+					netes.WriteUint16(item.Endure)
+					netes.WriteUint16(item.MaxEndure)
+					netes.WriteUint16(item.Energy)
+					netes.WriteUint16(item.MaxEnergy)
+					netes.WriteUint8(item.ForgeLv)
+					netes.WriteBool(item.Valid)
+					netes.WriteUint8(item.CheckNext1)
+					netes.WriteUint32(item.DbParam[0])
+					netes.WriteUint32(item.DbParam[1])
+					netes.WriteUint8(item.CheckNext2)
+
+					for _, attr := range item.Attrs {
+						netes.WriteUint16(attr.Id)
+						netes.WriteUint16(attr.Value)
+					}
+				*/
+			}
+
+			netes.WriteUint16(character.Look.Hair)
+		}
+
 		netes.WriteUint8(i.Pincode)
 		netes.WriteUint32(i.Encryption)
 		netes.WriteUint32(i.DwFlag)
@@ -159,14 +204,14 @@ func (i *OutcomingCharacters) Packet(db *database.Database) (func(netes network.
 	process := func(player *entitie.Player) []int {
 		if player.Error != nil {
 			switch player.Error {
-			case PlayerInGame:
-				i.ErrorCode = 1104
-			case PlayerIsNotFound:
-				i.ErrorCode = 1001
-			case PasswordIncorrect:
-				i.ErrorCode = 1002
+			case &support.PlayerInGame:
+				i.ErrorCode = player.Error.Code
+			case &support.PlayerIsNotFound:
+				i.ErrorCode = player.Error.Code
+			case &support.PasswordIncorrect:
+				i.ErrorCode = player.Error.Code
 			default:
-				i.ErrorCode = 1000
+				i.ErrorCode = player.Error.Code
 			}
 
 			return nil
@@ -174,10 +219,22 @@ func (i *OutcomingCharacters) Packet(db *database.Database) (func(netes network.
 
 		i.ErrorCode = 0
 		i.Key = []byte{0x00, 0x08, 0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49}
-		i.Flag = 0
 		i.Pincode = 1
 		i.Encryption = 0
 		i.DwFlag = 12820
+
+		// Only test data
+		for b := 0; b < 3; b++ {
+			character := Character{
+				Flag:  1,
+				Name:  "Haruki",
+				Job:   "golang-ru.slack.com",
+				Level: 1000,
+			}
+			character.Look.Race = 806
+
+			i.Characters = append(i.Characters, character)
+		}
 
 		return nil
 	}
@@ -198,7 +255,7 @@ func (i *IncomingExit) Packet(db *database.Database) (func(netes network.Netes),
 		user.IsActive = false
 		err := user.Update(player.ID)
 		if err != nil {
-			player.Error = err
+			player.Error = &support.CustomError{0, err}
 		}
 
 		player.Buffers.GetEC() <- struct{}{}
