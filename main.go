@@ -15,7 +15,7 @@ func main() {
 
 	var (
 		err error
-		app land.Application = land.Application{}
+		app = land.Application{}
 	)
 	defer core.ErrorGlobalHandler()
 
