@@ -1,7 +1,0 @@
-package: github.com/Nyarum/noterius
-import:
-- package: github.com/Nyarum/migrations
-- package: github.com/Sirupsen/logrus
-- package: github.com/aglyzov/charmap
-- package: gopkg.in/pg.v3
-- package: gopkg.in/yaml.v2

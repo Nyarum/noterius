@@ -1,0 +1,37 @@
+{
+  "Tables": [
+    {
+      "Name": "users",
+      "Columns": [
+        {
+          "Name": "id",
+          "Type": "uuid",
+          "PrimaryKey": true,
+          "Reference": null,
+          "NotNull": false
+        },
+        {
+          "Name": "username",
+          "Type": "text",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": false
+        },
+        {
+          "Name": "email",
+          "Type": "text",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": false
+        },
+        {
+          "Name": "password",
+          "Type": "text",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": false
+        }
+      ]
+    }
+  ]
+}

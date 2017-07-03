@@ -1,0 +1,11 @@
+version: '3'
+services:
+  db:
+    image: postgres:9.6
+    environment:
+      POSTGRES_USER: noterius
+      POSTGRES_PASSWORD: noterius
+    expose:
+      - "5455"
+    ports:
+      - "5455:5432"

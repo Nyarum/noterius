@@ -1,0 +1,5 @@
+[common]
+host = ":1973"
+
+[database]
+dsn = "noterius:noterius@localhost:5455/noterius?sslmode=disable"

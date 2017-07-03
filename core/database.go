@@ -1,49 +1,31 @@
 package core
 
 import (
-	"github.com/Nyarum/migrations"
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/pg.v3"
+	"database/sql"
+
+	_ "github.com/lib/pq"
 )
 
-// Database struct
-type DatabaseInfo struct {
-	DB *pg.DB
+type Database struct {
+	DB *sql.DB
 }
 
-// NewDatabase method for load database from path
-func NewDatabaseInfo(config *Config) (database DatabaseInfo, err error) {
-	database.DB = pg.Connect(&pg.Options{
-		Host:     config.Database.IP,
-		User:     config.Database.User,
-		Password: config.Database.Password,
-		Database: config.Database.Name,
-	})
+func NewDatabase() *Database {
+	return &Database{}
+}
 
-	// Check connect
-	_, err = database.DB.Exec(`SELECT SUM(1 + 1)`)
+func (d *Database) Load(dsn string) error {
+	db, err := sql.Open("postgres", "postgres://"+dsn)
 	if err != nil {
-		return
+		return err
 	}
 
-	for _, migration := range migrationsWorld {
-		err = migrations.Register(migration.Version, migration.Up, migration.Down)
-		if err != nil {
-			return
-		}
-	}
-
-	oldVersion, newVersion, err := migrations.Run(database.DB, "up")
+	_, err = db.Exec("SELECT COUNT(*)")
 	if err != nil {
-		return
+		return err
 	}
 
-	if newVersion != oldVersion {
-		log.WithFields(log.Fields{
-			"old": oldVersion,
-			"new": newVersion,
-		}).Info("Migrations have applied")
-	}
+	d.DB = db
 
-	return
+	return nil
 }
