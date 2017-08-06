@@ -2,20 +2,29 @@
 NAME=noterius
 
 setup:
-	go get -u github.com/golang/dep/cmd/dep
-	go get -u github.com/mattes/migrate
+	go get -u github.com/kardianos/govendor
+	go get -u gopkg.in/src-d/go-kallax.v1/...
+
+	# Bug with init() function in the driver
+	rm -rf ${GOPATH}/src/github.com/lib/pq
 
 generate:
-	go generate ./...
+	rm -rf ./models/kallax.go
+	go generate ./models
 
-build: generate
+build:
 	go build -o ${NAME} main.go
 
 run: build
 	./${NAME}
 
 migrate_up:
-	migrate -path ./migrations -database 'postgres://noterius:noterius@localhost:5455/noterius?sslmode=disable' up
+	kallax migrate up --all --dsn 'noterius:noterius@localhost:5455/noterius?sslmode=disable'
 	
 migrate_down:
-	migrate -path ./migrations -database 'postgres://noterius:noterius@localhost:5455/noterius?sslmode=disable' down
+	kallax migrate down --steps 1 --dsn 'noterius:noterius@localhost:5455/noterius?sslmode=disable'
+
+migrate_generate: generate
+	kallax migrate --input ./models/ --out ./migrations --name initial_schema
+
+	$(MAKE) migrate_up

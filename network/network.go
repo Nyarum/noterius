@@ -6,14 +6,14 @@ import (
 	"github.com/Nyarum/noterius/network/out"
 )
 
-type NetworkError string
+type Error string
 
-func (n NetworkError) Error() string {
+func (n Error) Error() string {
 	return string(n)
 }
 
 const (
-	NotSupportedOpcode NetworkError = "This opcode is not supported by the server"
+	NotSupportedOpcode Error = "This opcode is not supported by the server"
 )
 
 type INetwork interface {

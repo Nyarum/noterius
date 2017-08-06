@@ -38,7 +38,9 @@ func (s *Server) Run() error {
 		}
 	}()
 
-	world := actor.Spawn(actor.FromInstance(&entities.World{}))
+	world := actor.Spawn(actor.FromInstance(&entities.World{
+		DB: s.database,
+	}))
 
 	listen, err := net.Listen("tcp", s.config.Common.Host)
 	if err != nil {
@@ -62,8 +64,10 @@ func (s *Server) Run() error {
 				Logger:  s.logger,
 			}))
 			player = actor.Spawn(actor.FromInstance(&entities.Player{
+				DB:           s.database,
 				World:        world,
 				PacketSender: packetSender,
+				Logger:       s.logger,
 			}))
 			packetReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketReader{
 				World:        world,
@@ -79,8 +83,8 @@ func (s *Server) Run() error {
 			}))
 		)
 
-		packetSender.Tell(entities.SendPacket{
-			Packet: (&out.Date{}).SetCurrentTime(),
+		player.Tell(entities.RecordTime{
+			Time: (&out.Date{}).GetCurrentTime(),
 		})
 
 		var (

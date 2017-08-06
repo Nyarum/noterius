@@ -1,12 +1,14 @@
 package entities
 
 import (
+	"database/sql"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
 type World struct {
-	Players      map[int64]*actor.PID
-	PacketSender *actor.PID
+	DB      *sql.DB
+	Players map[int64]*actor.PID
 }
 
 func (state *World) Receive(context actor.Context) {

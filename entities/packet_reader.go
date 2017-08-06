@@ -3,7 +3,6 @@ package entities
 import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/Nyarum/noterius/network/in"
-	"github.com/Nyarum/noterius/network/out"
 	"go.uber.org/zap"
 )
 
@@ -19,8 +18,8 @@ func (state *PacketReader) Receive(context actor.Context) {
 	case *in.Auth:
 		state.Logger.Debugw("Received Auth packet", "details", msg)
 
-		state.PacketSender.Tell(SendPacket{
-			Packet: (&out.Auth{}).SetTestData(),
+		state.Player.Tell(Auth{
+			msg,
 		})
 	case *in.Exit:
 		state.Logger.Debugw("Received Exit packet", "details", msg)

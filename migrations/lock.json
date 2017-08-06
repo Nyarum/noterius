@@ -1,35 +1,55 @@
 {
   "Tables": [
     {
-      "Name": "users",
+      "Name": "players",
       "Columns": [
         {
           "Name": "id",
-          "Type": "uuid",
+          "Type": "serial",
           "PrimaryKey": true,
           "Reference": null,
-          "NotNull": false
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "created_at",
+          "Type": "timestamptz",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "updated_at",
+          "Type": "timestamptz",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
         },
         {
           "Name": "username",
           "Type": "text",
           "PrimaryKey": false,
           "Reference": null,
-          "NotNull": false
+          "NotNull": true,
+          "Unique": false
         },
         {
           "Name": "email",
           "Type": "text",
           "PrimaryKey": false,
           "Reference": null,
-          "NotNull": false
+          "NotNull": true,
+          "Unique": false
         },
         {
           "Name": "password",
           "Type": "text",
           "PrimaryKey": false,
           "Reference": null,
-          "NotNull": false
+          "NotNull": true,
+          "Unique": false
         }
       ]
     }

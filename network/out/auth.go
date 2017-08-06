@@ -39,56 +39,57 @@ func (d Auth) Opcode() uint16 {
 
 func (d *Auth) Pack(pr *barrel.Processor) {
 	pr.WriteUint16(d.ErrorCode)
-	pr.WriteBytes(d.Key)
 
-	pr.WriteUint8(uint8(len(d.Characters)))
-	for _, character := range d.Characters {
-		pr.WriteUint8(character.Flag)
-		pr.WriteString(character.Name)
-		pr.WriteString(character.Job)
-		pr.WriteUint16(character.Level)
+	if d.ErrorCode == 0 {
+		// Static key
+		d.Key = []byte{0x00, 0x08, 0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49}
+		pr.WriteBytes(d.Key)
 
-		pr.WriteUint16(uint16(1626))
-		pr.WriteUint8(character.Look.SynType)
-		pr.WriteUint16(character.Look.Race)
-		pr.WriteUint8(character.Look.BoatCheck)
+		pr.WriteUint8(uint8(len(d.Characters)))
+		for _, character := range d.Characters {
+			pr.WriteUint8(character.Flag)
+			pr.WriteString(character.Name)
+			pr.WriteString(character.Job)
+			pr.WriteUint16(character.Level)
 
-		for _, item := range character.Look.Items {
-			pr.WriteUint16(item.Id)
-			pr.WriteBytes(item.Pass[:])
-			/*
-				pr.WriteUint16(item.Num)
-				pr.WriteUint16(item.Endure)
-				pr.WriteUint16(item.MaxEndure)
-				pr.WriteUint16(item.Energy)
-				pr.WriteUint16(item.MaxEnergy)
-				pr.WriteUint8(item.ForgeLv)
-				pr.WriteBool(item.Valid)
-				pr.WriteUint8(item.CheckNext1)
-				pr.WriteUint32(item.DbParam[0])
-				pr.WriteUint32(item.DbParam[1])
-				pr.WriteUint8(item.CheckNext2)
-				for _, attr := range item.Attrs {
-					pr.WriteUint16(attr.Id)
-					pr.WriteUint16(attr.Value)
-				}
-			*/
+			pr.WriteUint16(uint16(1626))
+			pr.WriteUint8(character.Look.SynType)
+			pr.WriteUint16(character.Look.Race)
+			pr.WriteUint8(character.Look.BoatCheck)
+
+			for _, item := range character.Look.Items {
+				pr.WriteUint16(item.Id)
+				pr.WriteBytes(item.Pass[:])
+				/*
+					pr.WriteUint16(item.Num)
+					pr.WriteUint16(item.Endure)
+					pr.WriteUint16(item.MaxEndure)
+					pr.WriteUint16(item.Energy)
+					pr.WriteUint16(item.MaxEnergy)
+					pr.WriteUint8(item.ForgeLv)
+					pr.WriteBool(item.Valid)
+					pr.WriteUint8(item.CheckNext1)
+					pr.WriteUint32(item.DbParam[0])
+					pr.WriteUint32(item.DbParam[1])
+					pr.WriteUint8(item.CheckNext2)
+					for _, attr := range item.Attrs {
+						pr.WriteUint16(attr.Id)
+						pr.WriteUint16(attr.Value)
+					}
+				*/
+			}
+
+			pr.WriteUint16(character.Look.Hair)
 		}
 
-		pr.WriteUint16(character.Look.Hair)
+		pr.WriteUint8(d.Pincode)
+		pr.WriteUint32(d.Encryption)
+		pr.WriteUint32(d.DwFlag)
 	}
-
-	pr.WriteUint8(d.Pincode)
-	pr.WriteUint32(d.Encryption)
-	pr.WriteUint32(d.DwFlag)
-
 }
 
 func (d *Auth) SetTestData() *Auth {
-	d.ErrorCode = 0
-	d.Key = []byte{0x00, 0x08, 0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49}
 	d.Pincode = 1
-	d.Encryption = 0
 	d.DwFlag = 12820
 
 	// Only test data

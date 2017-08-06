@@ -234,13 +234,13 @@ func (p *Processor) ReadString(value *string) *Processor {
 		lnString = binary.BigEndian.Uint16(bufLenString)
 	}
 
-	bufString := make([]byte, lnString-1)
-	if bufString = p.buffer.Next(int(lnString - 1)); len(bufString) < int(lnString-1) {
+	bufString := make([]byte, lnString)
+	if bufString = p.buffer.Next(int(lnString)); len(bufString) < int(lnString) {
 		p.err = errors.New("Not enough bytes in buffer")
 		return p
 	}
 
-	p.buffer.Next(1)
+	bufString = bytes.TrimSuffix(bufString, []byte{0x00})
 
 	(*value) = string(bufString)
 

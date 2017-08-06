@@ -20,9 +20,8 @@ func (d *Date) Pack(pr *barrel.Processor) {
 	pr.WriteString(d.Time)
 }
 
-func (d *Date) SetCurrentTime() *Date {
+func (d *Date) GetCurrentTime() string {
 	timeNow := time.Now()
-	d.Time = fmt.Sprintf("[%02d-%02d %02d:%02d:%02d:%03d]", timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), timeNow.Second(), timeNow.Nanosecond()/1000000)
 
-	return d
+	return fmt.Sprintf("[%02d-%02d %02d:%02d:%02d:%03d]", timeNow.Month(), timeNow.Day(), timeNow.Hour(), timeNow.Minute(), timeNow.Second(), timeNow.Nanosecond()/1000000)
 }

@@ -7,6 +7,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"gopkg.in/src-d/go-kallax.v1"
 	"gopkg.in/src-d/go-kallax.v1/types"
@@ -24,14 +25,18 @@ func NewPlayer() (record *Player) {
 
 // GetID returns the primary key of the model.
 func (r *Player) GetID() kallax.Identifier {
-	return (*kallax.ULID)(&r.ID)
+	return (*kallax.NumericID)(&r.ID)
 }
 
 // ColumnAddress returns the pointer to the value of the given column.
 func (r *Player) ColumnAddress(col string) (interface{}, error) {
 	switch col {
 	case "id":
-		return (*kallax.ULID)(&r.ID), nil
+		return (*kallax.NumericID)(&r.ID), nil
+	case "created_at":
+		return &r.Timestamps.CreatedAt, nil
+	case "updated_at":
+		return &r.Timestamps.UpdatedAt, nil
 	case "username":
 		return &r.Username, nil
 	case "email":
@@ -49,6 +54,10 @@ func (r *Player) Value(col string) (interface{}, error) {
 	switch col {
 	case "id":
 		return r.ID, nil
+	case "created_at":
+		return r.Timestamps.CreatedAt, nil
+	case "updated_at":
+		return r.Timestamps.UpdatedAt, nil
 	case "username":
 		return r.Username, nil
 	case "email":
@@ -112,6 +121,13 @@ func (s *PlayerStore) Insert(record *Player) error {
 	record.SetSaving(true)
 	defer record.SetSaving(false)
 
+	record.CreatedAt = record.CreatedAt.Truncate(time.Microsecond)
+	record.UpdatedAt = record.UpdatedAt.Truncate(time.Microsecond)
+
+	if err := record.BeforeSave(); err != nil {
+		return err
+	}
+
 	return s.Store.Insert(Schema.Player.BaseSchema, record)
 }
 
@@ -122,8 +138,15 @@ func (s *PlayerStore) Insert(record *Player) error {
 // Only writable records can be updated. Writable objects are those that have
 // been just inserted or retrieved using a query with no custom select fields.
 func (s *PlayerStore) Update(record *Player, cols ...kallax.SchemaField) (updated int64, err error) {
+	record.CreatedAt = record.CreatedAt.Truncate(time.Microsecond)
+	record.UpdatedAt = record.UpdatedAt.Truncate(time.Microsecond)
+
 	record.SetSaving(true)
 	defer record.SetSaving(false)
+
+	if err := record.BeforeSave(); err != nil {
+		return 0, err
+	}
 
 	return s.Store.Update(Schema.Player.BaseSchema, record, cols...)
 }
@@ -313,7 +336,7 @@ func (q *PlayerQuery) Where(cond kallax.Condition) *PlayerQuery {
 // FindByID adds a new filter to the query that will require that
 // the ID property is equal to one of the passed values; if no passed values,
 // it will do nothing.
-func (q *PlayerQuery) FindByID(v ...kallax.ULID) *PlayerQuery {
+func (q *PlayerQuery) FindByID(v ...int64) *PlayerQuery {
 	if len(v) == 0 {
 		return q
 	}
@@ -322,6 +345,18 @@ func (q *PlayerQuery) FindByID(v ...kallax.ULID) *PlayerQuery {
 		values[i] = val
 	}
 	return q.Where(kallax.In(Schema.Player.ID, values...))
+}
+
+// FindByCreatedAt adds a new filter to the query that will require that
+// the CreatedAt property is equal to the passed value.
+func (q *PlayerQuery) FindByCreatedAt(cond kallax.ScalarCond, v time.Time) *PlayerQuery {
+	return q.Where(cond(Schema.Player.CreatedAt, v))
+}
+
+// FindByUpdatedAt adds a new filter to the query that will require that
+// the UpdatedAt property is equal to the passed value.
+func (q *PlayerQuery) FindByUpdatedAt(cond kallax.ScalarCond, v time.Time) *PlayerQuery {
+	return q.Where(cond(Schema.Player.UpdatedAt, v))
 }
 
 // FindByUsername adds a new filter to the query that will require that
@@ -456,10 +491,12 @@ type schema struct {
 
 type schemaPlayer struct {
 	*kallax.BaseSchema
-	ID       kallax.SchemaField
-	Username kallax.SchemaField
-	Email    kallax.SchemaField
-	Password kallax.SchemaField
+	ID        kallax.SchemaField
+	CreatedAt kallax.SchemaField
+	UpdatedAt kallax.SchemaField
+	Username  kallax.SchemaField
+	Email     kallax.SchemaField
+	Password  kallax.SchemaField
 }
 
 var Schema = &schema{
@@ -472,15 +509,19 @@ var Schema = &schema{
 			func() kallax.Record {
 				return new(Player)
 			},
-			false,
+			true,
 			kallax.NewSchemaField("id"),
+			kallax.NewSchemaField("created_at"),
+			kallax.NewSchemaField("updated_at"),
 			kallax.NewSchemaField("username"),
 			kallax.NewSchemaField("email"),
 			kallax.NewSchemaField("password"),
 		),
-		ID:       kallax.NewSchemaField("id"),
-		Username: kallax.NewSchemaField("username"),
-		Email:    kallax.NewSchemaField("email"),
-		Password: kallax.NewSchemaField("password"),
+		ID:        kallax.NewSchemaField("id"),
+		CreatedAt: kallax.NewSchemaField("created_at"),
+		UpdatedAt: kallax.NewSchemaField("updated_at"),
+		Username:  kallax.NewSchemaField("username"),
+		Email:     kallax.NewSchemaField("email"),
+		Password:  kallax.NewSchemaField("password"),
 	},
 }

@@ -31,6 +31,22 @@ func (state *PacketSender) Receive(context actor.Context) {
 		}
 
 		state.Logger.Debugw("Packet has sent", "len", ln)
+	case SendPacketWithLogout:
+		buf, err := state.Network.Marshal(msg.Packet)
+		if err != nil {
+			state.Logger.Errorw("Error marshal packet", "error", err)
+			return
+		}
+
+		ln, err := state.Client.Write(buf)
+		if err != nil {
+			state.Logger.Errorw("Error send packet", "error", err)
+			return
+		}
+
+		state.Logger.Debugw("Packet has sent", "len", ln)
+
+		context.Self().Tell(Logout{})
 	case Logout:
 		state.Client.Close()
 	}
