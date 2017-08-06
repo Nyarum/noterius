@@ -16,3 +16,6 @@ run: build
 
 migrate_up:
 	migrate -path ./migrations -database 'postgres://noterius:noterius@localhost:5455/noterius?sslmode=disable' up
+	
+migrate_down:
+	migrate -path ./migrations -database 'postgres://noterius:noterius@localhost:5455/noterius?sslmode=disable' down

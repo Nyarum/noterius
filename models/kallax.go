@@ -15,6 +15,8 @@ import (
 var _ types.SQLType
 var _ fmt.Formatter
 
+type modelSaveFunc func(*kallax.Store) error
+
 // NewPlayer returns a new instance of Player.
 func NewPlayer() (record *Player) {
 	return new(Player)
@@ -107,6 +109,9 @@ func (s *PlayerStore) DebugWith(logger kallax.LoggerFunc) *PlayerStore {
 // Insert inserts a Player in the database. A non-persisted object is
 // required for this operation.
 func (s *PlayerStore) Insert(record *Player) error {
+	record.SetSaving(true)
+	defer record.SetSaving(false)
+
 	return s.Store.Insert(Schema.Player.BaseSchema, record)
 }
 
@@ -117,6 +122,9 @@ func (s *PlayerStore) Insert(record *Player) error {
 // Only writable records can be updated. Writable objects are those that have
 // been just inserted or retrieved using a query with no custom select fields.
 func (s *PlayerStore) Update(record *Player, cols ...kallax.SchemaField) (updated int64, err error) {
+	record.SetSaving(true)
+	defer record.SetSaving(false)
+
 	return s.Store.Update(Schema.Player.BaseSchema, record, cols...)
 }
 
@@ -457,7 +465,7 @@ type schemaPlayer struct {
 var Schema = &schema{
 	Player: &schemaPlayer{
 		BaseSchema: kallax.NewBaseSchema(
-			"users",
+			"players",
 			"__player",
 			kallax.NewSchemaField("id"),
 			kallax.ForeignKeys{},

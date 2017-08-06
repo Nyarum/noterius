@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE TABLE users (
+CREATE TABLE players (
 	id uuid PRIMARY KEY,
 	username text,
 	email text,

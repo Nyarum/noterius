@@ -1,0 +1,179 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "Pc2ORQp+VY3Un/dkh4QwLC7R6lE=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "a368813c5e648fee92e5f6c30e3944ff9d5e8895",
+			"revisionTime": "2017-06-26T11:06:00Z"
+		},
+		{
+			"checksumSHA1": "SEWHtp6LFg0zD7ZEojzgOVYBx4E=",
+			"path": "github.com/Masterminds/squirrel",
+			"revision": "e13dbacee404686afd0acf2d44b8d34869605e03",
+			"revisionTime": "2015-03-02T16:50:45Z"
+		},
+		{
+			"checksumSHA1": "P4wslG9SoXBTlsrcyfrxcu3AvEg=",
+			"path": "github.com/Nyarum/barrel",
+			"revision": "e131023924e31d004ded9af4497a77fe61e42c4f",
+			"revisionTime": "2017-03-17T22:34:21Z"
+		},
+		{
+			"path": "github.com/Nyarum/noterius/database",
+			"revision": ""
+		},
+		{
+			"path": "github.com/Nyarum/noterius/entitie",
+			"revision": ""
+		},
+		{
+			"path": "github.com/Nyarum/noterius/library/crypt",
+			"revision": ""
+		},
+		{
+			"path": "github.com/Nyarum/noterius/library/network",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "BCmjskha6fhGDUxvgayGZnF8RUc=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "181d419aa9e2223811b824e8f0b4af96f9ba9302",
+			"revisionTime": "2017-07-28T07:42:14Z"
+		},
+		{
+			"checksumSHA1": "rDnDagTo8rQb/Z6C2RSjfbpHeio=",
+			"path": "github.com/aglyzov/charmap",
+			"revision": "945fb53710f223e44f612314a1d589532c81225c",
+			"revisionTime": "2015-12-20T13:28:47Z"
+		},
+		{
+			"checksumSHA1": "g0jYqsZKE7rkfrRY5O3NZ5Yjs4g=",
+			"path": "github.com/fiam/gounidecode/unidecode",
+			"revision": "8deddbd03fec2c28969266e52f27b6fb22be1823",
+			"revisionTime": "2015-06-29T11:25:15Z"
+		},
+		{
+			"checksumSHA1": "3dA3PsgYXZXzfsOOdDDvyp8zO0w=",
+			"path": "github.com/lann/builder",
+			"revision": "f22ce00fd9394014049dad11c244859432bd6820",
+			"revisionTime": "2015-08-08T15:11:31Z"
+		},
+		{
+			"checksumSHA1": "nR871nUQ6KxGoDR+TdgQhGUqcHI=",
+			"path": "github.com/lann/ps",
+			"revision": "62de8c46ede02a7675c4c79c84883eb164cb71e3",
+			"revisionTime": "2015-08-10T15:23:59Z"
+		},
+		{
+			"checksumSHA1": "ZAj/o03zG8Ui4mZ4XmzU4yyKC04=",
+			"path": "github.com/lib/pq",
+			"revision": "dd1fe2071026ce53f36a39112e645b4d4f5793a4",
+			"revisionTime": "2017-07-07T05:36:02Z"
+		},
+		{
+			"checksumSHA1": "q5SZBWFVC3wOIzftf+l/h5WLG1k=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "dd1fe2071026ce53f36a39112e645b4d4f5793a4",
+			"revisionTime": "2017-07-07T05:36:02Z"
+		},
+		{
+			"checksumSHA1": "B1iGaUz7NrjEmCjVdIgH5pvkTe8=",
+			"path": "github.com/oklog/ulid",
+			"revision": "66bb6560562feca7045b23db1ae85b01260f87c5",
+			"revisionTime": "2017-01-17T20:06:51Z"
+		},
+		{
+			"checksumSHA1": "Rx8K2QjF7Qou4tOjDr+zGaFjdoQ=",
+			"path": "github.com/remerge/rand",
+			"revision": "64a39085c6739b997da1f5d17210b005e17f5e4e",
+			"revisionTime": "2017-04-15T15:31:18Z"
+		},
+		{
+			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
+			"revisionTime": "2017-03-21T23:07:31Z"
+		},
+		{
+			"checksumSHA1": "LTOa3BADhwvT0wFCknPueQALm8I=",
+			"path": "github.com/valyala/bytebufferpool",
+			"revision": "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7",
+			"revisionTime": "2016-08-17T18:16:52Z"
+		},
+		{
+			"checksumSHA1": "3IdEHJfBkeEE8guKA2tcA8Fv6eg=",
+			"path": "go.uber.org/atomic",
+			"revision": "70bd1261d36be490ebd22a62b385a3c5d23b6240",
+			"revisionTime": "2017-05-09T22:23:09Z"
+		},
+		{
+			"checksumSHA1": "JDGx7hehaQunZySwPs7yvdUs2m8=",
+			"path": "go.uber.org/multierr",
+			"revision": "3c4937480c32f4c13a875a1829af76c98ca3d40a",
+			"revisionTime": "2017-06-30T17:54:37Z"
+		},
+		{
+			"checksumSHA1": "Xtsvh+RmozDTBYAvE2eXpinCIz4=",
+			"path": "go.uber.org/zap",
+			"revision": "e68420e36ce87d08dc24bb74bfc316a0a57c5f7b",
+			"revisionTime": "2017-08-02T17:13:41Z"
+		},
+		{
+			"checksumSHA1": "HYo/9nwrY08NQA+2ItPOAH8IFW8=",
+			"path": "go.uber.org/zap/buffer",
+			"revision": "e68420e36ce87d08dc24bb74bfc316a0a57c5f7b",
+			"revisionTime": "2017-08-02T17:13:41Z"
+		},
+		{
+			"checksumSHA1": "MuxOAtZEsJitlWBzhmpm2vGiHok=",
+			"path": "go.uber.org/zap/internal/bufferpool",
+			"revision": "e68420e36ce87d08dc24bb74bfc316a0a57c5f7b",
+			"revisionTime": "2017-08-02T17:13:41Z"
+		},
+		{
+			"checksumSHA1": "uC0L9eCSAYcCWNC8udJk/t1vvIU=",
+			"path": "go.uber.org/zap/internal/color",
+			"revision": "e68420e36ce87d08dc24bb74bfc316a0a57c5f7b",
+			"revisionTime": "2017-08-02T17:13:41Z"
+		},
+		{
+			"checksumSHA1": "b80CJExrVpXu3SA1iCQ6uLqTn2c=",
+			"path": "go.uber.org/zap/internal/exit",
+			"revision": "e68420e36ce87d08dc24bb74bfc316a0a57c5f7b",
+			"revisionTime": "2017-08-02T17:13:41Z"
+		},
+		{
+			"checksumSHA1": "66VZR7l5jQfBlDLzV/b3p8+bzEo=",
+			"path": "go.uber.org/zap/zapcore",
+			"revision": "e68420e36ce87d08dc24bb74bfc316a0a57c5f7b",
+			"revisionTime": "2017-08-02T17:13:41Z"
+		},
+		{
+			"checksumSHA1": "8wbHSD24FGJUJDS1F6wbtEt8z+w=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "42ff06aea7c329876e5a0fe94acc96902accf0ad",
+			"revisionTime": "2017-08-03T14:09:35Z"
+		},
+		{
+			"checksumSHA1": "NqlOcIqzDg46JUFFXqZdKUER0B0=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "d8f5ea21b9295e315e612b4bcf4bedea93454d4d",
+			"revisionTime": "2017-08-03T09:04:06Z"
+		},
+		{
+			"checksumSHA1": "LkAsnLUlAZSg3lRYk7BEyNfog3A=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "d8f5ea21b9295e315e612b4bcf4bedea93454d4d",
+			"revisionTime": "2017-08-03T09:04:06Z"
+		},
+		{
+			"checksumSHA1": "EIBYPV3Yrpcat18cPkaTouMoCqA=",
+			"path": "gopkg.in/src-d/go-kallax.v1/types",
+			"revision": "833eedb4c2644361b5c43ce3031a48946cbb428b",
+			"revisionTime": "2017-08-03T13:45:15Z"
+		}
+	],
+	"rootPath": "github.com/Nyarum/noterius"
+}

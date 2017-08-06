@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/Nyarum/noterius/core"
 	"github.com/Nyarum/noterius/server"
 	"go.uber.org/zap"
@@ -12,7 +14,7 @@ func main() {
 	configPath := flag.String("config", "resource/config.toml", "Path to config")
 	flag.Parse()
 
-	logger, _ := zap.NewDevelopment()
+	logger, _ := zap.NewDevelopment(zap.AddStacktrace(zapcore.FatalLevel))
 	defer logger.Sync()
 	sugarLogger := logger.Sugar()
 
