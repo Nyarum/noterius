@@ -92,7 +92,7 @@ func (s *Server) Run() error {
 				bb = bytebufferpool.Get()
 			}
 
-			bufTemp := make([]byte, 1536)
+			bufTemp := make([]byte, 4096)
 			ln, err := client.Read(bufTemp)
 			if err != nil {
 				if val, ok := err.(net.Error); ok && val.Timeout() {
@@ -108,24 +108,35 @@ func (s *Server) Run() error {
 
 			bb.Write(bufTemp[:ln])
 
-			if lenPacket == 0 {
-				lenPacket = int(binary.BigEndian.Uint16(bb.Bytes()[0:2]))
+			// Func to receive many sub packets in an one main packet
+			var manyDataFunc func() bool
+			manyDataFunc = func() bool {
+				if lenPacket == 0 {
+					lenPacket = int(binary.BigEndian.Uint16(bb.Bytes()[0:2]))
+				}
+
+				if lenPacket < int(ln) {
+					return false
+				}
+
+				connectReader.Tell(entities.ReadPacket{
+					Len: lenPacket - 2,
+					Buf: bb.Bytes()[2:],
+				})
+
+				bb.Set(bb.Bytes()[lenPacket:])
+				lenPacket = 0
+
+				if bb.Len() != 0 {
+					return manyDataFunc()
+				}
+
+				return false
 			}
 
-			if lenPacket < int(ln) {
-				continue
-			}
+			manyDataFunc()
 
-			bb.Set(bb.Bytes()[2:])
-
-			connectReader.Tell(entities.ReadPacket{
-				Len: lenPacket,
-				Buf: bb.Bytes(),
-			})
-
-			// Clear things
 			bytebufferpool.Put(bb)
-			lenPacket = 0
 		}
 	}
 }

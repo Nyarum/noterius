@@ -20,7 +20,7 @@ type ConnectReader struct {
 func (state *ConnectReader) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case ReadPacket:
-		if msg.Len == 2 {
+		if msg.Len == 0 {
 			state.Client.Write([]byte{0x00, 0x02})
 			return
 		}
@@ -30,7 +30,7 @@ func (state *ConnectReader) Receive(context actor.Context) {
 
 		state.Logger.Debugw("Received a new packet", "len", msg.Len, "uniqueID", uniqueID, "opcode", opcode)
 
-		if msg.Len >= 8 {
+		if msg.Len >= 6 {
 			packet, err := state.Network.Unmarshal(opcode, msg.Buf[6:])
 			if err != nil {
 				state.Logger.Errorw("Error unmarshal packet", "error", err)
