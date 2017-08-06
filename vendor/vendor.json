@@ -60,10 +60,10 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "P4wslG9SoXBTlsrcyfrxcu3AvEg=",
+			"checksumSHA1": "Hsunt82kpBG3evded3XdUIE0dps=",
 			"path": "github.com/Nyarum/barrel",
-			"revision": "e131023924e31d004ded9af4497a77fe61e42c4f",
-			"revisionTime": "2017-03-17T22:34:21Z"
+			"revision": "b08dcabfcdf7fdbaa355fd2c74cb54e4b2e23c47",
+			"revisionTime": "2017-08-06T19:51:49Z"
 		},
 		{
 			"path": "github.com/Nyarum/noterius/database",
