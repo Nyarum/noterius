@@ -120,8 +120,8 @@ func (s *Server) Run() error {
 				}
 
 				connectReader.Tell(entities.ReadPacket{
-					Len: lenPacket - 2,
-					Buf: bb.Bytes()[2:],
+					Len: lenPacket,
+					Buf: bb.Bytes(),
 				})
 
 				bb.Set(bb.Bytes()[lenPacket:])
