@@ -18,6 +18,10 @@ build:
 run: build
 	./${NAME}
 
+migrate_create:
+	echo "" > ./migrations/$$(date +%s)_${NAME}.up.sql
+	echo "" > ./migrations/$$(date +%s)_${NAME}.down.sql
+
 migrate_up:
 	kallax migrate up --all --dsn 'noterius:noterius@localhost:5455/noterius?sslmode=disable'
 	
