@@ -71,7 +71,6 @@ func (s *Server) Run(ctx context.Context) error {
 			s.logger.Errorw("Error accept connection", "err", err)
 			continue
 		}
-		defer client.Close()
 
 		s.logger.Infow("New connect", "ip", client.RemoteAddr())
 
@@ -112,6 +111,7 @@ func (s *Server) acceptConnect(ctx context.Context, client net.Conn, world *acto
 
 		connectReader.Stop()
 		packetReader.Stop()
+		packetSender.Stop()
 		player.Stop()
 	}()
 

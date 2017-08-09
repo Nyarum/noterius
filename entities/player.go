@@ -31,8 +31,6 @@ func (state *Player) Receive(context actor.Context) {
 		if state.Info != nil {
 			state.Info.IsActive = false
 			models.NewPlayerStore(state.DB).Update(state.Info)
-
-			state.PacketSender.Tell(msg)
 		}
 	case RecordTime:
 		state.Time = msg.Time

@@ -24,7 +24,7 @@ func (state *PacketReader) Receive(context actor.Context) {
 	case *in.Exit:
 		state.Logger.Debugw("Received Exit packet", "details", msg)
 
-		state.PacketSender.Stop()
+		state.PacketSender.Tell(Logout{})
 	case *in.Ping:
 		state.Logger.Debugw("Received Ping packet", "details", msg)
 	}
