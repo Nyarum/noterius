@@ -108,7 +108,7 @@ func (s *Server) acceptConnect(ctx context.Context, client net.Conn, world *acto
 		}))
 	)
 	defer func() {
-		s.logger.Infow("Shutdown connection actors", "ip", client.RemoteAddr())
+		s.logger.Debugw("Shutdown connection actors", "ip", client.RemoteAddr())
 
 		connectReader.Stop()
 		packetReader.Stop()
