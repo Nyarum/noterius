@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"go.uber.org/zap/zapcore"
 
@@ -11,6 +16,11 @@ import (
 )
 
 func main() {
+	// Wait to handle all exit functions
+	defer func() {
+		time.Sleep(3 * time.Second)
+	}()
+
 	configPath := flag.String("config", "resource/config.toml", "Path to config")
 	flag.Parse()
 
@@ -29,7 +39,20 @@ func main() {
 	}
 
 	serverInstance := server.NewServer(*configInstance, databaseInstance.DB, sugarLogger)
-	if err := serverInstance.Run(); err != nil {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for {
+			select {
+			case <-ch:
+				cancel()
+			}
+		}
+	}()
+
+	if err := serverInstance.Run(ctx); err != nil {
 		sugarLogger.Fatalw("Error server run", "err", err)
 	}
 }

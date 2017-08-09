@@ -21,11 +21,19 @@ type Player struct {
 	PacketSender *actor.PID
 	Logger       *zap.SugaredLogger
 
+	Info *models.Player
 	Time string
 }
 
 func (state *Player) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
+	case *actor.Stopping:
+		if state.Info != nil {
+			state.Info.IsActive = false
+			models.NewPlayerStore(state.DB).Update(state.Info)
+
+			state.PacketSender.Tell(msg)
+		}
 	case RecordTime:
 		state.Time = msg.Time
 
@@ -35,8 +43,12 @@ func (state *Player) Receive(context actor.Context) {
 			},
 		})
 	case Auth:
-		getPlayer, err := models.NewPlayerStore(state.DB).FindOne(
-			models.NewPlayerQuery().FindByUsername(msg.Login),
+		var (
+			playerStore = models.NewPlayerStore(state.DB)
+		)
+
+		getPlayer, err := playerStore.FindOne(
+			models.NewPlayerQuery().FindByUsername(msg.Login).WithCharacters(nil),
 		)
 		if err != nil {
 			if err == kallax.ErrNotFound {
@@ -67,13 +79,38 @@ func (state *Player) Receive(context actor.Context) {
 			return
 		}
 
-		state.PacketSender.Tell(SendPacket{
-			Packet: (&out.Auth{}).SetTestData(),
-		})
-	case Logout:
-		// Something we do with database and other services
-		// and exit
+		if getPlayer.IsActive {
+			state.PacketSender.Tell(SendPacketWithLogout{
+				Packet: &out.Auth{
+					ErrorCode: errors.PlayerInGame.GetID(),
+				},
+			})
+			return
+		}
 
-		state.PacketSender.Tell(msg)
+		authPacket := &out.Auth{}
+		authPacket.SetPincode(getPlayer.Pincode)
+		for _, character := range getPlayer.Characters {
+			charSub := out.CharacterSub{
+				Name:  character.Name,
+				Job:   character.Job,
+				Level: character.Level,
+				Look: out.CharacterLookSub{
+					Race: character.Race,
+				},
+			}
+			charSub.SetFlag(character.Enabled)
+
+			authPacket.Characters = append(authPacket.Characters, charSub)
+		}
+
+		state.Info = getPlayer
+
+		state.PacketSender.Tell(SendPacket{
+			Packet: authPacket,
+		})
+
+		getPlayer.IsActive = true
+		playerStore.Update(state.Info)
 	}
 }

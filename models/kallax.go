@@ -18,6 +18,586 @@ var _ fmt.Formatter
 
 type modelSaveFunc func(*kallax.Store) error
 
+// NewCharacter returns a new instance of Character.
+func NewCharacter() (record *Character) {
+	return new(Character)
+}
+
+// GetID returns the primary key of the model.
+func (r *Character) GetID() kallax.Identifier {
+	return (*kallax.NumericID)(&r.ID)
+}
+
+// ColumnAddress returns the pointer to the value of the given column.
+func (r *Character) ColumnAddress(col string) (interface{}, error) {
+	switch col {
+	case "id":
+		return (*kallax.NumericID)(&r.ID), nil
+	case "created_at":
+		return &r.Timestamps.CreatedAt, nil
+	case "updated_at":
+		return &r.Timestamps.UpdatedAt, nil
+	case "player_id":
+		return types.Nullable(kallax.VirtualColumn("player_id", r, new(kallax.NumericID))), nil
+	case "name":
+		return &r.Name, nil
+	case "job":
+		return &r.Job, nil
+	case "level":
+		return &r.Level, nil
+	case "race":
+		return &r.Race, nil
+	case "enabled":
+		return &r.Enabled, nil
+
+	default:
+		return nil, fmt.Errorf("kallax: invalid column in Character: %s", col)
+	}
+}
+
+// Value returns the value of the given column.
+func (r *Character) Value(col string) (interface{}, error) {
+	switch col {
+	case "id":
+		return r.ID, nil
+	case "created_at":
+		return r.Timestamps.CreatedAt, nil
+	case "updated_at":
+		return r.Timestamps.UpdatedAt, nil
+	case "player_id":
+		v := r.Model.VirtualColumn(col)
+		if v == nil {
+			return nil, kallax.ErrEmptyVirtualColumn
+		}
+		return v, nil
+	case "name":
+		return r.Name, nil
+	case "job":
+		return r.Job, nil
+	case "level":
+		return r.Level, nil
+	case "race":
+		return r.Race, nil
+	case "enabled":
+		return r.Enabled, nil
+
+	default:
+		return nil, fmt.Errorf("kallax: invalid column in Character: %s", col)
+	}
+}
+
+// NewRelationshipRecord returns a new record for the relatiobship in the given
+// field.
+func (r *Character) NewRelationshipRecord(field string) (kallax.Record, error) {
+	switch field {
+	case "Player":
+		return new(Player), nil
+
+	}
+	return nil, fmt.Errorf("kallax: model Character has no relationship %s", field)
+}
+
+// SetRelationship sets the given relationship in the given field.
+func (r *Character) SetRelationship(field string, rel interface{}) error {
+	switch field {
+	case "Player":
+		val, ok := rel.(*Player)
+		if !ok {
+			return fmt.Errorf("kallax: record of type %t can't be assigned to relationship Player", rel)
+		}
+		if !val.GetID().IsEmpty() {
+			r.Player = val
+		}
+
+		return nil
+
+	}
+	return fmt.Errorf("kallax: model Character has no relationship %s", field)
+}
+
+// CharacterStore is the entity to access the records of the type Character
+// in the database.
+type CharacterStore struct {
+	*kallax.Store
+}
+
+// NewCharacterStore creates a new instance of CharacterStore
+// using a SQL database.
+func NewCharacterStore(db *sql.DB) *CharacterStore {
+	return &CharacterStore{kallax.NewStore(db)}
+}
+
+// GenericStore returns the generic store of this store.
+func (s *CharacterStore) GenericStore() *kallax.Store {
+	return s.Store
+}
+
+// SetGenericStore changes the generic store of this store.
+func (s *CharacterStore) SetGenericStore(store *kallax.Store) {
+	s.Store = store
+}
+
+// Debug returns a new store that will print all SQL statements to stdout using
+// the log.Printf function.
+func (s *CharacterStore) Debug() *CharacterStore {
+	return &CharacterStore{s.Store.Debug()}
+}
+
+// DebugWith returns a new store that will print all SQL statements using the
+// given logger function.
+func (s *CharacterStore) DebugWith(logger kallax.LoggerFunc) *CharacterStore {
+	return &CharacterStore{s.Store.DebugWith(logger)}
+}
+
+func (s *CharacterStore) inverseRecords(record *Character) []modelSaveFunc {
+	var result []modelSaveFunc
+
+	if record.Player != nil && !record.Player.IsSaving() {
+		record.AddVirtualColumn("player_id", record.Player.GetID())
+		result = append(result, func(store *kallax.Store) error {
+			_, err := (&PlayerStore{store}).Save(record.Player)
+			return err
+		})
+	}
+
+	return result
+}
+
+// Insert inserts a Character in the database. A non-persisted object is
+// required for this operation.
+func (s *CharacterStore) Insert(record *Character) error {
+	record.SetSaving(true)
+	defer record.SetSaving(false)
+
+	record.CreatedAt = record.CreatedAt.Truncate(time.Microsecond)
+	record.UpdatedAt = record.UpdatedAt.Truncate(time.Microsecond)
+
+	if err := record.BeforeSave(); err != nil {
+		return err
+	}
+
+	inverseRecords := s.inverseRecords(record)
+
+	if len(inverseRecords) > 0 {
+		return s.Store.Transaction(func(s *kallax.Store) error {
+			for _, r := range inverseRecords {
+				if err := r(s); err != nil {
+					return err
+				}
+			}
+
+			if err := s.Insert(Schema.Character.BaseSchema, record); err != nil {
+				return err
+			}
+
+			return nil
+		})
+	}
+
+	return s.Store.Insert(Schema.Character.BaseSchema, record)
+}
+
+// Update updates the given record on the database. If the columns are given,
+// only these columns will be updated. Otherwise all of them will be.
+// Be very careful with this, as you will have a potentially different object
+// in memory but not on the database.
+// Only writable records can be updated. Writable objects are those that have
+// been just inserted or retrieved using a query with no custom select fields.
+func (s *CharacterStore) Update(record *Character, cols ...kallax.SchemaField) (updated int64, err error) {
+	record.CreatedAt = record.CreatedAt.Truncate(time.Microsecond)
+	record.UpdatedAt = record.UpdatedAt.Truncate(time.Microsecond)
+
+	record.SetSaving(true)
+	defer record.SetSaving(false)
+
+	if err := record.BeforeSave(); err != nil {
+		return 0, err
+	}
+
+	inverseRecords := s.inverseRecords(record)
+
+	if len(inverseRecords) > 0 {
+		err = s.Store.Transaction(func(s *kallax.Store) error {
+			for _, r := range inverseRecords {
+				if err := r(s); err != nil {
+					return err
+				}
+			}
+
+			updated, err = s.Update(Schema.Character.BaseSchema, record, cols...)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return 0, err
+		}
+
+		return updated, nil
+	}
+
+	return s.Store.Update(Schema.Character.BaseSchema, record, cols...)
+}
+
+// Save inserts the object if the record is not persisted, otherwise it updates
+// it. Same rules of Update and Insert apply depending on the case.
+func (s *CharacterStore) Save(record *Character) (updated bool, err error) {
+	if !record.IsPersisted() {
+		return false, s.Insert(record)
+	}
+
+	rowsUpdated, err := s.Update(record)
+	if err != nil {
+		return false, err
+	}
+
+	return rowsUpdated > 0, nil
+}
+
+// Delete removes the given record from the database.
+func (s *CharacterStore) Delete(record *Character) error {
+	return s.Store.Delete(Schema.Character.BaseSchema, record)
+}
+
+// Find returns the set of results for the given query.
+func (s *CharacterStore) Find(q *CharacterQuery) (*CharacterResultSet, error) {
+	rs, err := s.Store.Find(q)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewCharacterResultSet(rs), nil
+}
+
+// MustFind returns the set of results for the given query, but panics if there
+// is any error.
+func (s *CharacterStore) MustFind(q *CharacterQuery) *CharacterResultSet {
+	return NewCharacterResultSet(s.Store.MustFind(q))
+}
+
+// Count returns the number of rows that would be retrieved with the given
+// query.
+func (s *CharacterStore) Count(q *CharacterQuery) (int64, error) {
+	return s.Store.Count(q)
+}
+
+// MustCount returns the number of rows that would be retrieved with the given
+// query, but panics if there is an error.
+func (s *CharacterStore) MustCount(q *CharacterQuery) int64 {
+	return s.Store.MustCount(q)
+}
+
+// FindOne returns the first row returned by the given query.
+// `ErrNotFound` is returned if there are no results.
+func (s *CharacterStore) FindOne(q *CharacterQuery) (*Character, error) {
+	q.Limit(1)
+	q.Offset(0)
+	rs, err := s.Find(q)
+	if err != nil {
+		return nil, err
+	}
+
+	if !rs.Next() {
+		return nil, kallax.ErrNotFound
+	}
+
+	record, err := rs.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := rs.Close(); err != nil {
+		return nil, err
+	}
+
+	return record, nil
+}
+
+// FindAll returns a list of all the rows returned by the given query.
+func (s *CharacterStore) FindAll(q *CharacterQuery) ([]*Character, error) {
+	rs, err := s.Find(q)
+	if err != nil {
+		return nil, err
+	}
+
+	return rs.All()
+}
+
+// MustFindOne returns the first row retrieved by the given query. It panics
+// if there is an error or if there are no rows.
+func (s *CharacterStore) MustFindOne(q *CharacterQuery) *Character {
+	record, err := s.FindOne(q)
+	if err != nil {
+		panic(err)
+	}
+	return record
+}
+
+// Reload refreshes the Character with the data in the database and
+// makes it writable.
+func (s *CharacterStore) Reload(record *Character) error {
+	return s.Store.Reload(Schema.Character.BaseSchema, record)
+}
+
+// Transaction executes the given callback in a transaction and rollbacks if
+// an error is returned.
+// The transaction is only open in the store passed as a parameter to the
+// callback.
+func (s *CharacterStore) Transaction(callback func(*CharacterStore) error) error {
+	if callback == nil {
+		return kallax.ErrInvalidTxCallback
+	}
+
+	return s.Store.Transaction(func(store *kallax.Store) error {
+		return callback(&CharacterStore{store})
+	})
+}
+
+// CharacterQuery is the object used to create queries for the Character
+// entity.
+type CharacterQuery struct {
+	*kallax.BaseQuery
+}
+
+// NewCharacterQuery returns a new instance of CharacterQuery.
+func NewCharacterQuery() *CharacterQuery {
+	return &CharacterQuery{
+		BaseQuery: kallax.NewBaseQuery(Schema.Character.BaseSchema),
+	}
+}
+
+// Select adds columns to select in the query.
+func (q *CharacterQuery) Select(columns ...kallax.SchemaField) *CharacterQuery {
+	if len(columns) == 0 {
+		return q
+	}
+	q.BaseQuery.Select(columns...)
+	return q
+}
+
+// SelectNot excludes columns from being selected in the query.
+func (q *CharacterQuery) SelectNot(columns ...kallax.SchemaField) *CharacterQuery {
+	q.BaseQuery.SelectNot(columns...)
+	return q
+}
+
+// Copy returns a new identical copy of the query. Remember queries are mutable
+// so make a copy any time you need to reuse them.
+func (q *CharacterQuery) Copy() *CharacterQuery {
+	return &CharacterQuery{
+		BaseQuery: q.BaseQuery.Copy(),
+	}
+}
+
+// Order adds order clauses to the query for the given columns.
+func (q *CharacterQuery) Order(cols ...kallax.ColumnOrder) *CharacterQuery {
+	q.BaseQuery.Order(cols...)
+	return q
+}
+
+// BatchSize sets the number of items to fetch per batch when there are 1:N
+// relationships selected in the query.
+func (q *CharacterQuery) BatchSize(size uint64) *CharacterQuery {
+	q.BaseQuery.BatchSize(size)
+	return q
+}
+
+// Limit sets the max number of items to retrieve.
+func (q *CharacterQuery) Limit(n uint64) *CharacterQuery {
+	q.BaseQuery.Limit(n)
+	return q
+}
+
+// Offset sets the number of items to skip from the result set of items.
+func (q *CharacterQuery) Offset(n uint64) *CharacterQuery {
+	q.BaseQuery.Offset(n)
+	return q
+}
+
+// Where adds a condition to the query. All conditions added are concatenated
+// using a logical AND.
+func (q *CharacterQuery) Where(cond kallax.Condition) *CharacterQuery {
+	q.BaseQuery.Where(cond)
+	return q
+}
+
+func (q *CharacterQuery) WithPlayer() *CharacterQuery {
+	q.AddRelation(Schema.Player.BaseSchema, "Player", kallax.OneToOne, nil)
+	return q
+}
+
+// FindByID adds a new filter to the query that will require that
+// the ID property is equal to one of the passed values; if no passed values,
+// it will do nothing.
+func (q *CharacterQuery) FindByID(v ...int64) *CharacterQuery {
+	if len(v) == 0 {
+		return q
+	}
+	values := make([]interface{}, len(v))
+	for i, val := range v {
+		values[i] = val
+	}
+	return q.Where(kallax.In(Schema.Character.ID, values...))
+}
+
+// FindByCreatedAt adds a new filter to the query that will require that
+// the CreatedAt property is equal to the passed value.
+func (q *CharacterQuery) FindByCreatedAt(cond kallax.ScalarCond, v time.Time) *CharacterQuery {
+	return q.Where(cond(Schema.Character.CreatedAt, v))
+}
+
+// FindByUpdatedAt adds a new filter to the query that will require that
+// the UpdatedAt property is equal to the passed value.
+func (q *CharacterQuery) FindByUpdatedAt(cond kallax.ScalarCond, v time.Time) *CharacterQuery {
+	return q.Where(cond(Schema.Character.UpdatedAt, v))
+}
+
+// FindByPlayer adds a new filter to the query that will require that
+// the foreign key of Player is equal to the passed value.
+func (q *CharacterQuery) FindByPlayer(v int64) *CharacterQuery {
+	return q.Where(kallax.Eq(Schema.Character.PlayerFK, v))
+}
+
+// FindByName adds a new filter to the query that will require that
+// the Name property is equal to the passed value.
+func (q *CharacterQuery) FindByName(v string) *CharacterQuery {
+	return q.Where(kallax.Eq(Schema.Character.Name, v))
+}
+
+// FindByJob adds a new filter to the query that will require that
+// the Job property is equal to the passed value.
+func (q *CharacterQuery) FindByJob(v string) *CharacterQuery {
+	return q.Where(kallax.Eq(Schema.Character.Job, v))
+}
+
+// FindByLevel adds a new filter to the query that will require that
+// the Level property is equal to the passed value.
+func (q *CharacterQuery) FindByLevel(cond kallax.ScalarCond, v uint16) *CharacterQuery {
+	return q.Where(cond(Schema.Character.Level, v))
+}
+
+// FindByRace adds a new filter to the query that will require that
+// the Race property is equal to the passed value.
+func (q *CharacterQuery) FindByRace(cond kallax.ScalarCond, v uint16) *CharacterQuery {
+	return q.Where(cond(Schema.Character.Race, v))
+}
+
+// FindByEnabled adds a new filter to the query that will require that
+// the Enabled property is equal to the passed value.
+func (q *CharacterQuery) FindByEnabled(v bool) *CharacterQuery {
+	return q.Where(kallax.Eq(Schema.Character.Enabled, v))
+}
+
+// CharacterResultSet is the set of results returned by a query to the
+// database.
+type CharacterResultSet struct {
+	ResultSet kallax.ResultSet
+	last      *Character
+	lastErr   error
+}
+
+// NewCharacterResultSet creates a new result set for rows of the type
+// Character.
+func NewCharacterResultSet(rs kallax.ResultSet) *CharacterResultSet {
+	return &CharacterResultSet{ResultSet: rs}
+}
+
+// Next fetches the next item in the result set and returns true if there is
+// a next item.
+// The result set is closed automatically when there are no more items.
+func (rs *CharacterResultSet) Next() bool {
+	if !rs.ResultSet.Next() {
+		rs.lastErr = rs.ResultSet.Close()
+		rs.last = nil
+		return false
+	}
+
+	var record kallax.Record
+	record, rs.lastErr = rs.ResultSet.Get(Schema.Character.BaseSchema)
+	if rs.lastErr != nil {
+		rs.last = nil
+	} else {
+		var ok bool
+		rs.last, ok = record.(*Character)
+		if !ok {
+			rs.lastErr = fmt.Errorf("kallax: unable to convert record to *Character")
+			rs.last = nil
+		}
+	}
+
+	return true
+}
+
+// Get retrieves the last fetched item from the result set and the last error.
+func (rs *CharacterResultSet) Get() (*Character, error) {
+	return rs.last, rs.lastErr
+}
+
+// ForEach iterates over the complete result set passing every record found to
+// the given callback. It is possible to stop the iteration by returning
+// `kallax.ErrStop` in the callback.
+// Result set is always closed at the end.
+func (rs *CharacterResultSet) ForEach(fn func(*Character) error) error {
+	for rs.Next() {
+		record, err := rs.Get()
+		if err != nil {
+			return err
+		}
+
+		if err := fn(record); err != nil {
+			if err == kallax.ErrStop {
+				return rs.Close()
+			}
+
+			return err
+		}
+	}
+	return nil
+}
+
+// All returns all records on the result set and closes the result set.
+func (rs *CharacterResultSet) All() ([]*Character, error) {
+	var result []*Character
+	for rs.Next() {
+		record, err := rs.Get()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, record)
+	}
+	return result, nil
+}
+
+// One returns the first record on the result set and closes the result set.
+func (rs *CharacterResultSet) One() (*Character, error) {
+	if !rs.Next() {
+		return nil, kallax.ErrNotFound
+	}
+
+	record, err := rs.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := rs.Close(); err != nil {
+		return nil, err
+	}
+
+	return record, nil
+}
+
+// Err returns the last error occurred.
+func (rs *CharacterResultSet) Err() error {
+	return rs.lastErr
+}
+
+// Close closes the result set.
+func (rs *CharacterResultSet) Close() error {
+	return rs.ResultSet.Close()
+}
+
 // NewPlayer returns a new instance of Player.
 func NewPlayer() (record *Player) {
 	return new(Player)
@@ -43,6 +623,10 @@ func (r *Player) ColumnAddress(col string) (interface{}, error) {
 		return &r.Email, nil
 	case "password":
 		return &r.Password, nil
+	case "pincode":
+		return types.Nullable(&r.Pincode), nil
+	case "is_active":
+		return &r.IsActive, nil
 
 	default:
 		return nil, fmt.Errorf("kallax: invalid column in Player: %s", col)
@@ -64,6 +648,13 @@ func (r *Player) Value(col string) (interface{}, error) {
 		return r.Email, nil
 	case "password":
 		return r.Password, nil
+	case "pincode":
+		if r.Pincode == (*uint16)(nil) {
+			return nil, nil
+		}
+		return r.Pincode, nil
+	case "is_active":
+		return r.IsActive, nil
 
 	default:
 		return nil, fmt.Errorf("kallax: invalid column in Player: %s", col)
@@ -73,12 +664,35 @@ func (r *Player) Value(col string) (interface{}, error) {
 // NewRelationshipRecord returns a new record for the relatiobship in the given
 // field.
 func (r *Player) NewRelationshipRecord(field string) (kallax.Record, error) {
-	return nil, fmt.Errorf("kallax: model Player has no relationships")
+	switch field {
+	case "Characters":
+		return new(Character), nil
+
+	}
+	return nil, fmt.Errorf("kallax: model Player has no relationship %s", field)
 }
 
 // SetRelationship sets the given relationship in the given field.
 func (r *Player) SetRelationship(field string, rel interface{}) error {
-	return fmt.Errorf("kallax: model Player has no relationships")
+	switch field {
+	case "Characters":
+		records, ok := rel.([]kallax.Record)
+		if !ok {
+			return fmt.Errorf("kallax: relationship field %s needs a collection of records, not %T", field, rel)
+		}
+
+		r.Characters = make([]*Character, len(records))
+		for i, record := range records {
+			rel, ok := record.(*Character)
+			if !ok {
+				return fmt.Errorf("kallax: element of type %T cannot be added to relationship %s", record, field)
+			}
+			r.Characters[i] = rel
+		}
+		return nil
+
+	}
+	return fmt.Errorf("kallax: model Player has no relationship %s", field)
 }
 
 // PlayerStore is the entity to access the records of the type Player
@@ -115,6 +729,23 @@ func (s *PlayerStore) DebugWith(logger kallax.LoggerFunc) *PlayerStore {
 	return &PlayerStore{s.Store.DebugWith(logger)}
 }
 
+func (s *PlayerStore) relationshipRecords(record *Player) []modelSaveFunc {
+	var result []modelSaveFunc
+
+	for i := range record.Characters {
+		r := record.Characters[i]
+		if !r.IsSaving() {
+			r.AddVirtualColumn("player_id", record.GetID())
+			result = append(result, func(store *kallax.Store) error {
+				_, err := (&CharacterStore{store}).Save(r)
+				return err
+			})
+		}
+	}
+
+	return result
+}
+
 // Insert inserts a Player in the database. A non-persisted object is
 // required for this operation.
 func (s *PlayerStore) Insert(record *Player) error {
@@ -126,6 +757,24 @@ func (s *PlayerStore) Insert(record *Player) error {
 
 	if err := record.BeforeSave(); err != nil {
 		return err
+	}
+
+	records := s.relationshipRecords(record)
+
+	if len(records) > 0 {
+		return s.Store.Transaction(func(s *kallax.Store) error {
+			if err := s.Insert(Schema.Player.BaseSchema, record); err != nil {
+				return err
+			}
+
+			for _, r := range records {
+				if err := r(s); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
 	}
 
 	return s.Store.Insert(Schema.Player.BaseSchema, record)
@@ -146,6 +795,30 @@ func (s *PlayerStore) Update(record *Player, cols ...kallax.SchemaField) (update
 
 	if err := record.BeforeSave(); err != nil {
 		return 0, err
+	}
+
+	records := s.relationshipRecords(record)
+
+	if len(records) > 0 {
+		err = s.Store.Transaction(func(s *kallax.Store) error {
+			updated, err = s.Update(Schema.Player.BaseSchema, record, cols...)
+			if err != nil {
+				return err
+			}
+
+			for _, r := range records {
+				if err := r(s); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+		if err != nil {
+			return 0, err
+		}
+
+		return updated, nil
 	}
 
 	return s.Store.Update(Schema.Player.BaseSchema, record, cols...)
@@ -265,6 +938,98 @@ func (s *PlayerStore) Transaction(callback func(*PlayerStore) error) error {
 	})
 }
 
+// RemoveCharacters removes the given items of the Characters field of the
+// model. If no items are given, it removes all of them.
+// The items will also be removed from the passed record inside this method.
+// Note that is required that `Characters` is not empty. This method clears the
+// the elements of Characters in a model, it does not retrieve them to know
+// what relationships the model has.
+func (s *PlayerStore) RemoveCharacters(record *Player, deleted ...*Character) error {
+	var updated []*Character
+	var clear bool
+	if len(deleted) == 0 {
+		clear = true
+		deleted = record.Characters
+		if len(deleted) == 0 {
+			return nil
+		}
+	}
+
+	if len(deleted) > 1 {
+		err := s.Store.Transaction(func(s *kallax.Store) error {
+			for _, d := range deleted {
+				var r kallax.Record = d
+
+				if beforeDeleter, ok := r.(kallax.BeforeDeleter); ok {
+					if err := beforeDeleter.BeforeDelete(); err != nil {
+						return err
+					}
+				}
+
+				if err := s.Delete(Schema.Character.BaseSchema, d); err != nil {
+					return err
+				}
+
+				if afterDeleter, ok := r.(kallax.AfterDeleter); ok {
+					if err := afterDeleter.AfterDelete(); err != nil {
+						return err
+					}
+				}
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if clear {
+			record.Characters = nil
+			return nil
+		}
+	} else {
+		var r kallax.Record = deleted[0]
+		if beforeDeleter, ok := r.(kallax.BeforeDeleter); ok {
+			if err := beforeDeleter.BeforeDelete(); err != nil {
+				return err
+			}
+		}
+
+		var err error
+		if afterDeleter, ok := r.(kallax.AfterDeleter); ok {
+			err = s.Store.Transaction(func(s *kallax.Store) error {
+				err := s.Delete(Schema.Character.BaseSchema, r)
+				if err != nil {
+					return err
+				}
+
+				return afterDeleter.AfterDelete()
+			})
+		} else {
+			err = s.Store.Delete(Schema.Character.BaseSchema, deleted[0])
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, r := range record.Characters {
+		var found bool
+		for _, d := range deleted {
+			if d.GetID().Equals(r.GetID()) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			updated = append(updated, r)
+		}
+	}
+	record.Characters = updated
+	return nil
+}
+
 // PlayerQuery is the object used to create queries for the Player
 // entity.
 type PlayerQuery struct {
@@ -333,6 +1098,11 @@ func (q *PlayerQuery) Where(cond kallax.Condition) *PlayerQuery {
 	return q
 }
 
+func (q *PlayerQuery) WithCharacters(cond kallax.Condition) *PlayerQuery {
+	q.AddRelation(Schema.Character.BaseSchema, "Characters", kallax.OneToMany, cond)
+	return q
+}
+
 // FindByID adds a new filter to the query that will require that
 // the ID property is equal to one of the passed values; if no passed values,
 // it will do nothing.
@@ -375,6 +1145,12 @@ func (q *PlayerQuery) FindByEmail(v string) *PlayerQuery {
 // the Password property is equal to the passed value.
 func (q *PlayerQuery) FindByPassword(v string) *PlayerQuery {
 	return q.Where(kallax.Eq(Schema.Player.Password, v))
+}
+
+// FindByIsActive adds a new filter to the query that will require that
+// the IsActive property is equal to the passed value.
+func (q *PlayerQuery) FindByIsActive(v bool) *PlayerQuery {
+	return q.Where(kallax.Eq(Schema.Player.IsActive, v))
 }
 
 // PlayerResultSet is the set of results returned by a query to the
@@ -486,7 +1262,21 @@ func (rs *PlayerResultSet) Close() error {
 }
 
 type schema struct {
-	Player *schemaPlayer
+	Character *schemaCharacter
+	Player    *schemaPlayer
+}
+
+type schemaCharacter struct {
+	*kallax.BaseSchema
+	ID        kallax.SchemaField
+	CreatedAt kallax.SchemaField
+	UpdatedAt kallax.SchemaField
+	PlayerFK  kallax.SchemaField
+	Name      kallax.SchemaField
+	Job       kallax.SchemaField
+	Level     kallax.SchemaField
+	Race      kallax.SchemaField
+	Enabled   kallax.SchemaField
 }
 
 type schemaPlayer struct {
@@ -497,15 +1287,51 @@ type schemaPlayer struct {
 	Username  kallax.SchemaField
 	Email     kallax.SchemaField
 	Password  kallax.SchemaField
+	Pincode   kallax.SchemaField
+	IsActive  kallax.SchemaField
 }
 
 var Schema = &schema{
+	Character: &schemaCharacter{
+		BaseSchema: kallax.NewBaseSchema(
+			"characters",
+			"__character",
+			kallax.NewSchemaField("id"),
+			kallax.ForeignKeys{
+				"Player": kallax.NewForeignKey("player_id", true),
+			},
+			func() kallax.Record {
+				return new(Character)
+			},
+			true,
+			kallax.NewSchemaField("id"),
+			kallax.NewSchemaField("created_at"),
+			kallax.NewSchemaField("updated_at"),
+			kallax.NewSchemaField("player_id"),
+			kallax.NewSchemaField("name"),
+			kallax.NewSchemaField("job"),
+			kallax.NewSchemaField("level"),
+			kallax.NewSchemaField("race"),
+			kallax.NewSchemaField("enabled"),
+		),
+		ID:        kallax.NewSchemaField("id"),
+		CreatedAt: kallax.NewSchemaField("created_at"),
+		UpdatedAt: kallax.NewSchemaField("updated_at"),
+		PlayerFK:  kallax.NewSchemaField("player_id"),
+		Name:      kallax.NewSchemaField("name"),
+		Job:       kallax.NewSchemaField("job"),
+		Level:     kallax.NewSchemaField("level"),
+		Race:      kallax.NewSchemaField("race"),
+		Enabled:   kallax.NewSchemaField("enabled"),
+	},
 	Player: &schemaPlayer{
 		BaseSchema: kallax.NewBaseSchema(
 			"players",
 			"__player",
 			kallax.NewSchemaField("id"),
-			kallax.ForeignKeys{},
+			kallax.ForeignKeys{
+				"Characters": kallax.NewForeignKey("player_id", false),
+			},
 			func() kallax.Record {
 				return new(Player)
 			},
@@ -516,6 +1342,8 @@ var Schema = &schema{
 			kallax.NewSchemaField("username"),
 			kallax.NewSchemaField("email"),
 			kallax.NewSchemaField("password"),
+			kallax.NewSchemaField("pincode"),
+			kallax.NewSchemaField("is_active"),
 		),
 		ID:        kallax.NewSchemaField("id"),
 		CreatedAt: kallax.NewSchemaField("created_at"),
@@ -523,5 +1351,7 @@ var Schema = &schema{
 		Username:  kallax.NewSchemaField("username"),
 		Email:     kallax.NewSchemaField("email"),
 		Password:  kallax.NewSchemaField("password"),
+		Pincode:   kallax.NewSchemaField("pincode"),
+		IsActive:  kallax.NewSchemaField("is_active"),
 	},
 }

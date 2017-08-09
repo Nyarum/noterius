@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/binary"
 	"io"
@@ -31,7 +32,7 @@ func NewServer(config core.Config, database *sql.DB, logger *zap.SugaredLogger) 
 	}
 }
 
-func (s *Server) Run() error {
+func (s *Server) Run(ctx context.Context) error {
 	defer func() {
 		if r := recover(); r != nil {
 			s.logger.Errorw("Recovered main server", "details", r)
@@ -41,6 +42,7 @@ func (s *Server) Run() error {
 	world := actor.Spawn(actor.FromInstance(&entities.World{
 		DB: s.database,
 	}))
+	defer world.Stop()
 
 	listen, err := net.Listen("tcp", s.config.Common.Host)
 	if err != nil {
@@ -49,49 +51,85 @@ func (s *Server) Run() error {
 
 	s.logger.Infow("Started server", "host", s.config.Common.Host)
 
+	// Graceful shutdown
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				listen.Close()
+			}
+		}
+	}()
+
 	for {
 		client, err := listen.Accept()
 		if err != nil {
+			if ctx.Err() == context.Canceled {
+				return nil
+			}
+
 			s.logger.Errorw("Error accept connection", "err", err)
 			continue
 		}
 		defer client.Close()
 
-		var (
-			packetSender = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketSender{
-				Client:  client,
-				Network: network.NewNetwork(),
-				Logger:  s.logger,
-			}))
-			player = actor.Spawn(actor.FromInstance(&entities.Player{
-				DB:           s.database,
-				World:        world,
-				PacketSender: packetSender,
-				Logger:       s.logger,
-			}))
-			packetReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketReader{
-				World:        world,
-				Player:       player,
-				PacketSender: packetSender,
-				Logger:       s.logger,
-			}))
-			connectReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.ConnectReader{
-				Client:       client,
-				PacketReader: packetReader,
-				Network:      network.NewNetwork(),
-				Logger:       s.logger,
-			}))
-		)
+		s.logger.Infow("New connect", "ip", client.RemoteAddr())
 
-		player.Tell(entities.RecordTime{
-			Time: (&out.Date{}).GetCurrentTime(),
-		})
+		go s.acceptConnect(ctx, client, world)
+	}
+}
 
-		var (
-			lenPacket int
-			bb        *bytebufferpool.ByteBuffer
-		)
-		for {
+func (s *Server) acceptConnect(ctx context.Context, client net.Conn, world *actor.PID) {
+	var (
+		closeConnection = make(chan struct{}, 1)
+		packetSender    = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketSender{
+			Client:          client,
+			Network:         network.NewNetwork(),
+			Logger:          s.logger,
+			CloseConnection: closeConnection,
+		}))
+		player = actor.Spawn(actor.FromInstance(&entities.Player{
+			DB:           s.database,
+			World:        world,
+			PacketSender: packetSender,
+			Logger:       s.logger,
+		}))
+		packetReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketReader{
+			World:        world,
+			Player:       player,
+			PacketSender: packetSender,
+			Logger:       s.logger,
+		}))
+		connectReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.ConnectReader{
+			Client:       client,
+			PacketReader: packetReader,
+			Network:      network.NewNetwork(),
+			Logger:       s.logger,
+		}))
+	)
+	defer func() {
+		s.logger.Infow("Shutdown connection actors", "ip", client.RemoteAddr())
+
+		connectReader.Stop()
+		packetReader.Stop()
+		player.Stop()
+	}()
+
+	player.Tell(entities.RecordTime{
+		Time: (&out.Date{}).GetCurrentTime(),
+	})
+
+	var (
+		lenPacket int
+		bb        *bytebufferpool.ByteBuffer
+	)
+	for {
+		select {
+		case <-closeConnection:
+			return
+		case <-ctx.Done():
+			return
+		default:
 			if lenPacket == 0 {
 				bb = bytebufferpool.Get()
 			}
@@ -138,7 +176,9 @@ func (s *Server) Run() error {
 				return false
 			}
 
-			manyDataFunc()
+			if !manyDataFunc() {
+				continue
+			}
 
 			bytebufferpool.Put(bb)
 		}

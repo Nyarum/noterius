@@ -1,6 +1,86 @@
 {
   "Tables": [
     {
+      "Name": "characters",
+      "Columns": [
+        {
+          "Name": "id",
+          "Type": "serial",
+          "PrimaryKey": true,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "created_at",
+          "Type": "timestamptz",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "updated_at",
+          "Type": "timestamptz",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "player_id",
+          "Type": "bigint",
+          "PrimaryKey": false,
+          "Reference": {
+            "Table": "players",
+            "Column": "id"
+          },
+          "NotNull": false,
+          "Unique": false
+        },
+        {
+          "Name": "name",
+          "Type": "text",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "job",
+          "Type": "text",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "level",
+          "Type": "integer",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "race",
+          "Type": "integer",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "enabled",
+          "Type": "boolean",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        }
+      ]
+    },
+    {
       "Name": "players",
       "Columns": [
         {
@@ -46,6 +126,22 @@
         {
           "Name": "password",
           "Type": "text",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": true,
+          "Unique": false
+        },
+        {
+          "Name": "pincode",
+          "Type": "integer",
+          "PrimaryKey": false,
+          "Reference": null,
+          "NotNull": false,
+          "Unique": false
+        },
+        {
+          "Name": "is_active",
+          "Type": "boolean",
           "PrimaryKey": false,
           "Reference": null,
           "NotNull": true,
