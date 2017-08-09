@@ -25,6 +25,6 @@ migrate_down:
 	kallax migrate down --steps 1 --dsn 'noterius:noterius@localhost:5455/noterius?sslmode=disable'
 
 migrate_generate: generate
-	kallax migrate --input ./models/ --out ./migrations --name initial_schema
-
-	$(MAKE) migrate_up
+	rm -rf dump
+	mkdir -p dump
+	kallax migrate --input ./models/ --out ./dump --name initial_schema
