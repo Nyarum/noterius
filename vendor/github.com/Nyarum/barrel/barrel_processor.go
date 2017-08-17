@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+
+	"github.com/yuin/charsetutil"
 )
 
 const (
@@ -247,6 +249,39 @@ func (p *Processor) ReadString(value *string) *Processor {
 	return p
 }
 
+func (p *Processor) ReadString1251(value *string) *Processor {
+	var lnString uint16
+	bufLenString := make([]byte, 2)
+	if bufLenString = p.buffer.Next(2); len(bufLenString) < 2 {
+		p.err = errors.New("Not enough bytes in buffer")
+		return p
+	}
+
+	if p.Endian() == LittleEndian {
+		lnString = binary.LittleEndian.Uint16(bufLenString)
+	} else {
+		lnString = binary.BigEndian.Uint16(bufLenString)
+	}
+
+	bufString := make([]byte, lnString)
+	if bufString = p.buffer.Next(int(lnString)); len(bufString) < int(lnString) {
+		p.err = errors.New("Not enough bytes in buffer")
+		return p
+	}
+
+	bufString = bytes.TrimSuffix(bufString, []byte{0x00})
+
+	covertChars, err := charsetutil.DecodeBytes(bufString, "cp1251")
+	if err != nil {
+		p.err = err
+		return p
+	}
+
+	(*value) = covertChars
+
+	return p
+}
+
 func (p *Processor) ReadStringEOF(value *string) *Processor {
 	str, err := p.buffer.ReadString(0x00)
 	if err != nil {
@@ -470,6 +505,38 @@ func (p *Processor) WriteFloat64(value float64) *Processor {
 }
 
 func (p *Processor) WriteString(value string) *Processor {
+	value += string([]byte{0x00})
+
+	// Write len header for string, 2 bytes
+	ln := len(value)
+
+	buf := make([]byte, 2)
+
+	if p.Endian() == LittleEndian {
+		buf[0] = byte(ln)
+		buf[1] = byte(ln >> 8)
+	} else {
+		buf[0] = byte(ln >> 8)
+		buf[1] = byte(ln)
+	}
+
+	p.buffer.Write(buf)
+
+	// Write string
+	p.buffer.WriteString(value)
+
+	return p
+}
+
+func (p *Processor) WriteString1251(value string) *Processor {
+	convertChars, err := charsetutil.EncodeString(value, "cp1251")
+	if err != nil {
+		p.err = err
+		return p
+	}
+
+	value = string(convertChars)
+
 	value += string([]byte{0x00})
 
 	// Write len header for string, 2 bytes

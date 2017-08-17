@@ -62,8 +62,8 @@ func (d *Auth) Pack(pr *barrel.Processor) {
 			pr.WriteUint8(character.Flag)
 
 			if character.Flag == 1 {
-				pr.WriteString(character.Name)
-				pr.WriteString(character.Job)
+				pr.WriteString1251(character.Name)
+				pr.WriteString1251(character.Job)
 				pr.WriteUint16(character.Level)
 
 				pr.WriteUint16(uint16(1626))
