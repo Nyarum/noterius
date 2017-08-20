@@ -18,6 +18,8 @@ Next-gen version with new architecture.
 - Run `make migrate_up`
 - And start the server `make run`
 
-### Trailer for game
+### Game trailer
+
+Just to introduce a game :)
 
 [![Cool trailer for TOP ;)](http://img.youtube.com/vi/0l1TWRR5KuI/0.jpg)](http://www.youtube.com/watch?v=0l1TWRR5KuI)
