@@ -137,6 +137,8 @@ func (state *Player) Receive(context actor.Context) {
 			return
 		}
 
+		state.Info.Pincode = &msg.PasswordNew
+
 		playerStore := models.NewPlayerStore(state.DB)
 		playerStore.Update(state.Info)
 

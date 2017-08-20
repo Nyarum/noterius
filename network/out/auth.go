@@ -15,7 +15,7 @@ type Auth struct {
 }
 
 func (a *Auth) SetPincode(pincode *string) {
-	if pincode != nil {
+	if pincode != nil && len(*pincode) == 32 {
 		a.Pincode = 1
 	}
 }
