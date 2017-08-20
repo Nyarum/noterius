@@ -4,11 +4,17 @@ Next-gen version with new architecture.
 
 ### Status
 
-Currently it rewriting
+- [Packets issue](https://github.com/Nyarum/noterius/issues/6), in progress...
 
-### Installation
+### Development
 
-Soon...
+#### Installation
+
+- Install [docker](https://docs.docker.com/engine/installation)
+- Install [docker-compose](https://github.com/docker/compose/releases)
+- Install [golang](https://golang.org/dl/) >1.8 version
+- Run `make setup`
+- And start the server `make run`
 
 ### Trailer for game
 
