@@ -27,4 +27,8 @@ var (
 	ClientVersionMismatch   NetworkError = NewNetworkError(7, "Version is mismatch")
 	UnknownError            NetworkError = NewNetworkError(1000, "Unknown error")
 	SecretPasswordIncorrect NetworkError = NewNetworkError(534, "Secret password is incorrect")
+	ExistCharName           NetworkError = NewNetworkError(526, "Character name is exists")
+	InvalidCharName         NetworkError = NewNetworkError(531, "Invalid character name")
+	InvalidBirthLocation    NetworkError = NewNetworkError(527, "Map isn't exists")
+	InternalError           NetworkError = NewNetworkError(521, "Internal error")
 )

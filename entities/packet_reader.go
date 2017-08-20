@@ -16,9 +16,7 @@ type PacketReader struct {
 func (state *PacketReader) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *in.Auth:
-		state.Player.Tell(Auth{
-			msg,
-		})
+		state.Player.Tell(msg)
 	case *in.Exit:
 		state.PacketSender.Tell(Logout{})
 	case *in.Ping:
@@ -27,6 +25,8 @@ func (state *PacketReader) Receive(context actor.Context) {
 	case *in.ChangeSecret:
 		state.Player.Tell(msg)
 	case *in.DeleteCharacter:
+		state.Player.Tell(msg)
+	case *in.CreateCharacter:
 		state.Player.Tell(msg)
 	}
 }

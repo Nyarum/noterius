@@ -1,9 +1,5 @@
 package common
 
-type StructGeneric interface {
-	Slice() []interface{}
-}
-
 type CharacterLookSub struct {
 	SynType   uint8
 	Race      uint16

@@ -42,7 +42,7 @@ func (state *Player) Receive(context actor.Context) {
 				Time: msg.Time,
 			},
 		})
-	case Auth:
+	case *in.Auth:
 		var (
 			playerStore = models.NewPlayerStore(state.DB)
 		)
@@ -125,9 +125,7 @@ func (state *Player) Receive(context actor.Context) {
 			},
 		})
 	case *in.ChangeSecret:
-		resp := &out.ChangeSecret{
-			ErrorCode: 0,
-		}
+		resp := &out.ChangeSecret{}
 
 		if *state.Info.Pincode != msg.PasswordOld {
 			state.Logger.Debugw("Old secret password is incorrect", "username", state.Info.Username)
@@ -146,9 +144,7 @@ func (state *Player) Receive(context actor.Context) {
 			Packet: resp,
 		})
 	case *in.DeleteCharacter:
-		resp := &out.DeleteCharacter{
-			ErrorCode: 0,
-		}
+		resp := &out.DeleteCharacter{}
 
 		if *state.Info.Pincode != msg.Secret {
 			state.Logger.Debugw("Secret password is incorrect", "username", state.Info.Username)
@@ -171,6 +167,67 @@ func (state *Player) Receive(context actor.Context) {
 
 		state.PacketSender.Tell(SendPacket{
 			Packet: resp,
+		})
+	case *in.CreateCharacter:
+		var (
+			resp           = &out.CreateCharacter{}
+			characterStore = models.NewCharacterStore(state.DB)
+			mapStore       = models.NewMapStore(state.DB)
+		)
+
+		charGet, err := characterStore.FindOne(
+			models.NewCharacterQuery().FindByName(msg.Name),
+		)
+		if charGet != nil {
+			resp.ErrorCode = common.ExistCharName.GetID()
+			state.PacketSender.Tell(SendPacket{
+				Packet: resp,
+			})
+			return
+		}
+
+		mapGet, err := mapStore.FindOne(
+			models.NewMapQuery().FindByName(msg.Map),
+		)
+		if err != nil {
+			if err == kallax.ErrNotFound {
+				resp.ErrorCode = common.InvalidBirthLocation.GetID()
+			} else {
+				resp.ErrorCode = common.InternalError.GetID()
+			}
+
+			state.PacketSender.Tell(SendPacket{
+				Packet: resp,
+			})
+
+			state.Logger.Errorw("Find error", "error", err)
+			return
+		}
+
+		characterModel := models.NewCharacter()
+		characterModel.Player = state.Info
+		characterModel.Name = msg.Name
+		characterModel.Map = mapGet
+		characterModel.Job = "Newbie"
+		characterModel.Race = msg.Look.Race
+		characterModel.Level = 1
+		characterModel.Enabled = true
+
+		err = characterStore.Insert(characterModel)
+		if err != nil {
+			resp.ErrorCode = common.InternalError.GetID()
+			state.PacketSender.Tell(SendPacket{
+				Packet: resp,
+			})
+
+			state.Logger.Errorw("Insert error", "error", err)
+			return
+		}
+
+		state.Info.Characters = append(state.Info.Characters, characterModel)
+
+		state.PacketSender.Tell(SendPacket{
+			Packet: &out.CreateCharacter{},
 		})
 	}
 }

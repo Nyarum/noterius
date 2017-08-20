@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"github.com/Nyarum/noterius/network/in"
 	"github.com/Nyarum/noterius/network/out"
 )
 
@@ -19,10 +18,6 @@ type SendPacketWithLogout struct {
 }
 
 type Logout struct {
-}
-
-type Auth struct {
-	*in.Auth
 }
 
 type RecordTime struct {

@@ -34,6 +34,7 @@ func NewNetwork() *Network {
 	packets[(in.NewSecret{}).Opcode()] = &in.NewSecret{}
 	packets[(in.ChangeSecret{}).Opcode()] = &in.ChangeSecret{}
 	packets[(in.DeleteCharacter{}).Opcode()] = &in.DeleteCharacter{}
+	packets[(in.CreateCharacter{}).Opcode()] = &in.CreateCharacter{}
 
 	return &Network{
 		packets:   packets,

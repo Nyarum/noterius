@@ -9,6 +9,7 @@ type Character struct {
 	Player  *Player `fk:"player_id,inverse"`
 	Name    string  `unique:"true"`
 	Job     string
+	Map     *Map `fk:"map_id,inverse"`
 	Level   uint16
 	Race    uint16
 	Enabled bool
