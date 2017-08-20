@@ -649,7 +649,7 @@ func (r *Player) Value(col string) (interface{}, error) {
 	case "password":
 		return r.Password, nil
 	case "pincode":
-		if r.Pincode == (*uint16)(nil) {
+		if r.Pincode == (*string)(nil) {
 			return nil, nil
 		}
 		return r.Pincode, nil

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Nyarum/barrel"
-	"github.com/Nyarum/noterius/network/opcodes"
+	"github.com/Nyarum/noterius/network/common"
 )
 
 type Date struct {
@@ -13,7 +13,7 @@ type Date struct {
 }
 
 func (d Date) Opcode() uint16 {
-	return opcodes.OP_SERVER_CHAPSTR
+	return common.OP_SERVER_CHAPSTR
 }
 
 func (d *Date) Pack(pr *barrel.Processor) {

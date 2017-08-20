@@ -31,5 +31,4 @@ migrate_down:
 migrate_generate: generate
 	rm -rf dump
 	mkdir -p dump
-	cp migrations/* dump
 	kallax migrate --input ./models/ --out ./dump --name initial_schema

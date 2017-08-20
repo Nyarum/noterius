@@ -7,9 +7,9 @@ type Player struct {
 	kallax.Timestamps
 	ID         int64
 	Characters []*Character `fk:"player_id"`
-	Username   string
+	Username   string       `unique:"true"`
 	Email      string
 	Password   string
-	Pincode    *uint16
+	Pincode    *string
 	IsActive   bool
 }

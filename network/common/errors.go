@@ -1,4 +1,4 @@
-package errors
+package common
 
 type NetworkError struct {
 	ID    uint16

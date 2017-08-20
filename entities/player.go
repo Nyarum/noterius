@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/Nyarum/noterius/network/common"
+	"github.com/Nyarum/noterius/network/in"
+
 	"go.uber.org/zap"
 
 	kallax "gopkg.in/src-d/go-kallax.v1"
@@ -11,7 +14,6 @@ import (
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/Nyarum/noterius/common/crypt"
 	"github.com/Nyarum/noterius/models"
-	"github.com/Nyarum/noterius/network/errors"
 	"github.com/Nyarum/noterius/network/out"
 )
 
@@ -52,7 +54,7 @@ func (state *Player) Receive(context actor.Context) {
 			if err == kallax.ErrNotFound {
 				state.PacketSender.Tell(SendPacketWithLogout{
 					Packet: &out.Auth{
-						ErrorCode: errors.PlayerIsNotFound.GetID(),
+						ErrorCode: common.PlayerIsNotFound.GetID(),
 					},
 				})
 			}
@@ -68,19 +70,20 @@ func (state *Player) Receive(context actor.Context) {
 		}
 
 		if encryptPassword != msg.Password {
-			state.Logger.Debugw("Verify error", "username", msg.Login, "error", errors.PasswordIncorrect)
+			state.Logger.Debugw("Verify error", "username", msg.Login, "error", common.PasswordIncorrect)
 			state.PacketSender.Tell(SendPacketWithLogout{
 				Packet: &out.Auth{
-					ErrorCode: errors.PasswordIncorrect.GetID(),
+					ErrorCode: common.PasswordIncorrect.GetID(),
 				},
 			})
 			return
 		}
 
 		if getPlayer.IsActive {
+			state.Logger.Debugw("Account is already logged", "username", msg.Login)
 			state.PacketSender.Tell(SendPacketWithLogout{
 				Packet: &out.Auth{
-					ErrorCode: errors.PlayerInGame.GetID(),
+					ErrorCode: common.PlayerInGame.GetID(),
 				},
 			})
 			return
@@ -89,11 +92,11 @@ func (state *Player) Receive(context actor.Context) {
 		authPacket := &out.Auth{}
 		authPacket.SetPincode(getPlayer.Pincode)
 		for _, character := range getPlayer.Characters {
-			charSub := out.CharacterSub{
+			charSub := common.CharacterSub{
 				Name:  character.Name,
 				Job:   character.Job,
 				Level: character.Level,
-				Look: out.CharacterLookSub{
+				Look: common.CharacterLookSub{
 					Race: character.Race,
 				},
 			}
@@ -110,5 +113,64 @@ func (state *Player) Receive(context actor.Context) {
 
 		getPlayer.IsActive = true
 		playerStore.Update(state.Info)
+	case *in.NewSecret:
+		state.Info.Pincode = &msg.Password
+
+		playerStore := models.NewPlayerStore(state.DB)
+		playerStore.Update(state.Info)
+
+		state.PacketSender.Tell(SendPacket{
+			Packet: &out.NewSecret{
+				ErrorCode: 0,
+			},
+		})
+	case *in.ChangeSecret:
+		resp := &out.ChangeSecret{
+			ErrorCode: 0,
+		}
+
+		if *state.Info.Pincode != msg.PasswordOld {
+			state.Logger.Debugw("Old secret password is incorrect", "username", state.Info.Username)
+
+			resp.ErrorCode = common.SecretPasswordIncorrect.GetID()
+			state.PacketSender.Tell(SendPacket{
+				Packet: resp,
+			})
+			return
+		}
+
+		playerStore := models.NewPlayerStore(state.DB)
+		playerStore.Update(state.Info)
+
+		state.PacketSender.Tell(SendPacket{
+			Packet: resp,
+		})
+	case *in.DeleteCharacter:
+		resp := &out.DeleteCharacter{
+			ErrorCode: 0,
+		}
+
+		if *state.Info.Pincode != msg.Secret {
+			state.Logger.Debugw("Secret password is incorrect", "username", state.Info.Username)
+
+			resp.ErrorCode = common.SecretPasswordIncorrect.GetID()
+			state.PacketSender.Tell(SendPacket{
+				Packet: resp,
+			})
+			return
+		}
+
+		for n, char := range state.Info.Characters {
+			if char.Name == msg.Name {
+				state.Info.Characters[n].Enabled = false
+
+				characterStore := models.NewCharacterStore(state.DB)
+				characterStore.Update(state.Info.Characters[n])
+			}
+		}
+
+		state.PacketSender.Tell(SendPacket{
+			Packet: resp,
+		})
 	}
 }

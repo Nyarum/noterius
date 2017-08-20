@@ -1,4 +1,4 @@
-package opcodes
+package common
 
 const (
 	OP_CLIENT_CHARTRADE_ITEM                    = 316

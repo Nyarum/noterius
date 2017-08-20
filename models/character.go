@@ -7,7 +7,7 @@ type Character struct {
 	kallax.Timestamps
 	ID      int64
 	Player  *Player `fk:"player_id,inverse"`
-	Name    string
+	Name    string  `unique:"true"`
 	Job     string
 	Level   uint16
 	Race    uint16

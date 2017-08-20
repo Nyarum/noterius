@@ -2,7 +2,7 @@ package in
 
 import (
 	"github.com/Nyarum/barrel"
-	"github.com/Nyarum/noterius/network/opcodes"
+	"github.com/Nyarum/noterius/network/common"
 )
 
 type Auth struct {
@@ -15,7 +15,7 @@ type Auth struct {
 }
 
 func (a Auth) Opcode() uint16 {
-	return opcodes.OP_CLIENT_LOGIN
+	return common.OP_CLIENT_LOGIN
 }
 
 func (a *Auth) Unpack(pr *barrel.Processor) {

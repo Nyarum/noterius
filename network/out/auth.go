@@ -2,51 +2,26 @@ package out
 
 import (
 	"github.com/Nyarum/barrel"
-	"github.com/Nyarum/noterius/network/opcodes"
+	"github.com/Nyarum/noterius/network/common"
 )
-
-type CharacterLookSub struct {
-	SynType   uint8
-	Race      uint16
-	BoatCheck uint8
-	Items     [10]struct {
-		Id   uint16
-		Pass [160]byte
-	}
-	Hair uint16
-}
-
-type CharacterSub struct {
-	Flag  uint8
-	Name  string
-	Job   string
-	Level uint16
-	Look  CharacterLookSub
-}
-
-func (c *CharacterSub) SetFlag(flag bool) {
-	if flag {
-		c.Flag = 1
-	}
-}
 
 type Auth struct {
 	ErrorCode  uint16
 	Key        []byte
-	Characters []CharacterSub
+	Characters []common.CharacterSub
 	Pincode    uint8
 	Encryption uint32
 	DwFlag     uint32
 }
 
-func (a *Auth) SetPincode(pincode *uint16) {
+func (a *Auth) SetPincode(pincode *string) {
 	if pincode != nil {
 		a.Pincode = 1
 	}
 }
 
 func (d Auth) Opcode() uint16 {
-	return opcodes.OP_SERVER_LOGIN
+	return common.OP_SERVER_LOGIN
 }
 
 func (d *Auth) Pack(pr *barrel.Processor) {
@@ -72,7 +47,7 @@ func (d *Auth) Pack(pr *barrel.Processor) {
 				pr.WriteUint8(character.Look.BoatCheck)
 
 				for _, item := range character.Look.Items {
-					pr.WriteUint16(item.Id)
+					pr.WriteUint16(item.ID)
 					pr.WriteBytes(item.Pass[:])
 					/*
 						pr.WriteUint16(item.Num)
@@ -108,7 +83,7 @@ func (d *Auth) SetTestData() *Auth {
 
 	// Only test data
 	for b := 0; b < 3; b++ {
-		character := CharacterSub{
+		character := common.CharacterSub{
 			Flag:  1,
 			Name:  "Haruki",
 			Job:   "golang-ru.slack.com",

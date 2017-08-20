@@ -31,6 +31,9 @@ func NewNetwork() *Network {
 	packets[(in.Ping{}).Opcode()] = &in.Ping{}
 	packets[(in.Auth{}).Opcode()] = &in.Auth{}
 	packets[(in.Exit{}).Opcode()] = &in.Exit{}
+	packets[(in.NewSecret{}).Opcode()] = &in.NewSecret{}
+	packets[(in.ChangeSecret{}).Opcode()] = &in.ChangeSecret{}
+	packets[(in.DeleteCharacter{}).Opcode()] = &in.DeleteCharacter{}
 
 	return &Network{
 		packets:   packets,
