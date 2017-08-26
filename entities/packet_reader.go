@@ -10,14 +10,14 @@ import (
 	"github.com/Nyarum/noterius/network"
 )
 
-type ConnectReader struct {
-	Client       net.Conn
-	PacketReader *actor.PID
-	Network      network.INetwork
-	Logger       *zap.SugaredLogger
+type PacketReader struct {
+	Client  net.Conn
+	Player  *actor.PID
+	Network network.INetwork
+	Logger  *zap.SugaredLogger
 }
 
-func (state *ConnectReader) Receive(context actor.Context) {
+func (state *PacketReader) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case ReadPacket:
 		if msg.Len == 2 {
@@ -37,7 +37,7 @@ func (state *ConnectReader) Receive(context actor.Context) {
 				return
 			}
 
-			state.PacketReader.Tell(packet)
+			state.Player.Tell(packet)
 		}
 	}
 }
