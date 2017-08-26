@@ -50,9 +50,9 @@ func (s *Server) Run(ctx context.Context) error {
 
 	s.logger.Infow("Started server", "host", s.config.Common.Host)
 
+	// Graceful shutdown and global ticker
 	tick := time.Tick(1 * time.Second / 2)
 
-	// Graceful shutdown and global ticker
 	go func() {
 		for {
 			select {
