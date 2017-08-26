@@ -8,15 +8,26 @@ import (
 
 type World struct {
 	DB      *sql.DB
-	Players map[int64]*actor.PID
+	Players *actor.PIDSet
+}
+
+func NewWorld(db *sql.DB) *World {
+	return &World{
+		DB:      db,
+		Players: actor.NewPIDSet(),
+	}
 }
 
 func (state *World) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
+	case GlobalTick:
+		state.Players.ForEach(func(i int, pid actor.PID) {
+			pid.Tell(msg)
+		})
 	case AddPlayer:
-		state.Players[msg.ID] = msg.Player
+		state.Players.Add(msg.Player)
 	case DeletePlayer:
-		delete(state.Players, msg.ID)
+		state.Players.Remove(msg.Player)
 	}
 }
 

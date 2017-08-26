@@ -2,6 +2,7 @@ package entities
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/Nyarum/noterius/network/common"
@@ -32,13 +33,6 @@ func (state *Player) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *actor.Stopping:
 		if state.Info != nil {
-			// Update world things
-			if state.InWorld {
-				state.World.Tell(DeletePlayer{
-					ID: state.Info.ID,
-				})
-			}
-
 			// Update info of player
 			state.Info.IsActive = false
 			models.NewPlayerStore(state.DB).Update(state.Info)
@@ -243,6 +237,46 @@ func (state *Player) Receive(context actor.Context) {
 
 		state.PacketSender.Tell(SendPacket{
 			Packet: &out.CreateCharacter{},
+		})
+	case *in.EnterWorld:
+		// Handle
+		state.PacketSender.Tell(SendPacket{
+			Packet: (&out.EnterWorld{}).SetTestChar(),
+		})
+
+		state.InWorld = true
+		state.World.Tell(AddPlayer{
+			Player: context.Self(),
+		})
+
+		context.BecomeStacked(state.WorldHandle)
+	}
+}
+
+func (state *Player) WorldHandle(context actor.Context) {
+	switch msg := context.Message().(type) {
+	case *actor.Stopping:
+		if state.Info != nil {
+			// Update world things
+			if state.InWorld {
+				state.World.Tell(DeletePlayer{
+					Player: context.Self(),
+				})
+			}
+
+			// Update info of player
+			state.Info.IsActive = false
+			models.NewPlayerStore(state.DB).Update(state.Info)
+		}
+	case *in.Exit:
+		state.PacketSender.Tell(Logout{})
+	case GlobalTick:
+		// Here will be a handle
+	case *in.BagTempSync:
+		fmt.Println(msg)
+
+		state.PacketSender.Tell(SendPacket{
+			Packet: (&out.BagTempSync{}).SetTestData(),
 		})
 	}
 }

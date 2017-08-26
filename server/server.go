@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/binary"
 	"io"
+	"time"
 
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/AsynkronIT/protoactor-go/router"
@@ -39,9 +40,7 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
-	world := actor.Spawn(actor.FromInstance(&entities.World{
-		DB: s.database,
-	}))
+	world := actor.Spawn(actor.FromInstance(entities.NewWorld(s.database)))
 	defer world.Stop()
 
 	listen, err := net.Listen("tcp", s.config.Common.Host)
@@ -51,10 +50,16 @@ func (s *Server) Run(ctx context.Context) error {
 
 	s.logger.Infow("Started server", "host", s.config.Common.Host)
 
-	// Graceful shutdown
+	tick := time.Tick(1 * time.Second / 2)
+
+	// Graceful shutdown and global ticker
 	go func() {
 		for {
 			select {
+			case tm := <-tick:
+				world.Tell(entities.GlobalTick{
+					Now: tm,
+				})
 			case <-ctx.Done():
 				listen.Close()
 			}

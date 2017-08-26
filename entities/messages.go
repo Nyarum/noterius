@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"time"
+
 	"github.com/AsynkronIT/protoactor-go/actor"
 	"github.com/Nyarum/noterius/network/out"
 )
@@ -26,10 +28,13 @@ type RecordTime struct {
 }
 
 type AddPlayer struct {
-	ID     int64
 	Player *actor.PID
 }
 
 type DeletePlayer struct {
-	ID int64
+	Player *actor.PID
+}
+
+type GlobalTick struct {
+	Now time.Time
 }

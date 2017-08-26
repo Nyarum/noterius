@@ -41,31 +41,28 @@ func (d *Auth) Pack(pr *barrel.Processor) {
 				pr.WriteString1251(character.Job)
 				pr.WriteUint16(character.Level)
 
-				pr.WriteUint16(uint16(1626))
+				pr.WriteUint16(1626) // Statically size look of character
 				pr.WriteUint8(character.Look.SynType)
 				pr.WriteUint16(character.Look.Race)
 				pr.WriteUint8(character.Look.BoatCheck)
 
 				for _, item := range character.Look.Items {
 					pr.WriteUint16(item.ID)
-					pr.WriteBytes(item.Pass[:])
-					/*
-						pr.WriteUint16(item.Num)
-						pr.WriteUint16(item.Endure)
-						pr.WriteUint16(item.MaxEndure)
-						pr.WriteUint16(item.Energy)
-						pr.WriteUint16(item.MaxEnergy)
-						pr.WriteUint8(item.ForgeLv)
-						pr.WriteBool(item.Valid)
-						pr.WriteUint8(item.CheckNext1)
-						pr.WriteUint32(item.DbParam[0])
-						pr.WriteUint32(item.DbParam[1])
-						pr.WriteUint8(item.CheckNext2)
-						for _, attr := range item.Attrs {
-							pr.WriteUint16(attr.Id)
-							pr.WriteUint16(attr.Value)
-						}
-					*/
+					pr.WriteUint16(item.Num)
+					pr.WriteUint16(item.Durability)
+					pr.WriteUint16(item.MaxDurability)
+					pr.WriteUint16(item.Energy)
+					pr.WriteUint16(item.MaxEnergy)
+					pr.WriteUint8(item.ForgeLv)
+					pr.WriteBool(item.Valid)
+					pr.WriteUint32(item.DbParam1)
+					pr.WriteUint32(item.DbParam2)
+					for _, attr := range item.Attrs {
+						pr.WriteUint16(attr.ID)
+						pr.WriteUint16(attr.Value)
+					}
+					pr.WriteBytes(item.Unknown2[:])
+					pr.WriteByte(item.Unknown3)
 				}
 
 				pr.WriteUint16(character.Look.Hair)
