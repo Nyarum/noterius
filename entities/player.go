@@ -272,6 +272,8 @@ func (state *Player) WorldHandle(context actor.Context) {
 		state.PacketSender.Tell(Logout{})
 	case GlobalTick:
 		// Here will be a handle
+
+		state.Logger.Debug("Test tick!")
 	case *in.BagTempSync:
 		fmt.Println(msg)
 

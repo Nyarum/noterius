@@ -40,8 +40,12 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
+	tick := time.NewTicker(1 * time.Second / 2)
 	world := actor.Spawn(actor.FromInstance(entities.NewWorld(s.database)))
-	defer world.Stop()
+	defer func() {
+		tick.Stop()
+		world.Stop()
+	}()
 
 	listen, err := net.Listen("tcp", s.config.Common.Host)
 	if err != nil {
@@ -51,12 +55,10 @@ func (s *Server) Run(ctx context.Context) error {
 	s.logger.Infow("Started server", "host", s.config.Common.Host)
 
 	// Graceful shutdown and global ticker
-	tick := time.Tick(1 * time.Second / 2)
-
 	go func() {
 		for {
 			select {
-			case tm := <-tick:
+			case tm := <-tick.C:
 				world.Tell(entities.GlobalTick{
 					Now: tm,
 				})
