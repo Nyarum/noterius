@@ -23,14 +23,23 @@ type Player struct {
 	PacketSender *actor.PID
 	Logger       *zap.SugaredLogger
 
-	Info *models.Player
-	Time string
+	Info    *models.Player
+	Time    string
+	InWorld bool
 }
 
 func (state *Player) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
 	case *actor.Stopping:
 		if state.Info != nil {
+			// Update world things
+			if state.InWorld {
+				state.World.Tell(DeletePlayer{
+					ID: state.Info.ID,
+				})
+			}
+
+			// Update info of player
 			state.Info.IsActive = false
 			models.NewPlayerStore(state.DB).Update(state.Info)
 		}
@@ -42,6 +51,10 @@ func (state *Player) Receive(context actor.Context) {
 				Time: msg.Time,
 			},
 		})
+	case *in.Exit:
+		state.PacketSender.Tell(Logout{})
+	case *in.Ping:
+		// Still handle isn't exist
 	case *in.Auth:
 		var (
 			playerStore = models.NewPlayerStore(state.DB)

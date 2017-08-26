@@ -13,6 +13,10 @@ type World struct {
 
 func (state *World) Receive(context actor.Context) {
 	switch msg := context.Message().(type) {
+	case AddPlayer:
+		state.Players[msg.ID] = msg.Player
+	case DeletePlayer:
+		delete(state.Players, msg.ID)
 	}
 }
 

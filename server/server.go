@@ -80,12 +80,10 @@ func (s *Server) Run(ctx context.Context) error {
 
 func (s *Server) acceptConnect(ctx context.Context, client net.Conn, world *actor.PID) {
 	var (
-		closeConnection = make(chan struct{}, 1)
-		packetSender    = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketSender{
-			Client:          client,
-			Network:         network.NewNetwork(),
-			Logger:          s.logger,
-			CloseConnection: closeConnection,
+		packetSender = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketSender{
+			Client:  client,
+			Network: network.NewNetwork(),
+			Logger:  s.logger,
 		}))
 		player = actor.Spawn(actor.FromInstance(&entities.Player{
 			DB:           s.database,
@@ -94,22 +92,15 @@ func (s *Server) acceptConnect(ctx context.Context, client net.Conn, world *acto
 			Logger:       s.logger,
 		}))
 		packetReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.PacketReader{
-			World:        world,
-			Player:       player,
-			PacketSender: packetSender,
-			Logger:       s.logger,
-		}))
-		connectReader = actor.Spawn(router.NewRoundRobinPool(5).WithInstance(&entities.ConnectReader{
-			Client:       client,
-			PacketReader: packetReader,
-			Network:      network.NewNetwork(),
-			Logger:       s.logger,
+			Client:  client,
+			Player:  player,
+			Network: network.NewNetwork(),
+			Logger:  s.logger,
 		}))
 	)
 	defer func() {
 		s.logger.Debugw("Shutdown connection actors", "ip", client.RemoteAddr())
 
-		connectReader.Stop()
 		packetReader.Stop()
 		packetSender.Stop()
 		player.Stop()
@@ -124,63 +115,60 @@ func (s *Server) acceptConnect(ctx context.Context, client net.Conn, world *acto
 		bb        *bytebufferpool.ByteBuffer
 	)
 	for {
-		select {
-		case <-closeConnection:
-			return
-		case <-ctx.Done():
-			return
-		default:
+		if ctx.Err() == context.Canceled {
+			break
+		}
+
+		if lenPacket == 0 {
+			bb = bytebufferpool.Get()
+		}
+
+		bufTemp := make([]byte, 4096)
+		ln, err := client.Read(bufTemp)
+		if err != nil {
+			if val, ok := err.(net.Error); ok && val.Timeout() {
+				s.logger.Errorw("Client is timeout", "error", err)
+			}
+
+			if err == io.EOF {
+				s.logger.Errorw("Client is disconnected", "error", err)
+			}
+
+			break
+		}
+
+		bb.Write(bufTemp[:ln])
+
+		// Func to receive many sub packets in an one main packet
+		var manyDataFunc func() bool
+		manyDataFunc = func() bool {
 			if lenPacket == 0 {
-				bb = bytebufferpool.Get()
+				lenPacket = int(binary.BigEndian.Uint16(bb.Bytes()[0:2]))
 			}
 
-			bufTemp := make([]byte, 4096)
-			ln, err := client.Read(bufTemp)
-			if err != nil {
-				if val, ok := err.(net.Error); ok && val.Timeout() {
-					s.logger.Errorw("Client is timeout", "error", err)
-				}
-
-				if err == io.EOF {
-					s.logger.Errorw("Client is disconnected", "error", err)
-				}
-
-				break
-			}
-
-			bb.Write(bufTemp[:ln])
-
-			// Func to receive many sub packets in an one main packet
-			var manyDataFunc func() bool
-			manyDataFunc = func() bool {
-				if lenPacket == 0 {
-					lenPacket = int(binary.BigEndian.Uint16(bb.Bytes()[0:2]))
-				}
-
-				if lenPacket < int(ln) {
-					return false
-				}
-
-				connectReader.Tell(entities.ReadPacket{
-					Len: lenPacket,
-					Buf: bb.Bytes(),
-				})
-
-				bb.Set(bb.Bytes()[lenPacket:])
-				lenPacket = 0
-
-				if bb.Len() != 0 {
-					return manyDataFunc()
-				}
-
+			if lenPacket < int(ln) {
 				return false
 			}
 
-			if !manyDataFunc() {
-				continue
+			packetReader.Tell(entities.ReadPacket{
+				Len: lenPacket,
+				Buf: bb.Bytes(),
+			})
+
+			bb.Set(bb.Bytes()[lenPacket:])
+			lenPacket = 0
+
+			if bb.Len() != 0 {
+				return manyDataFunc()
 			}
 
-			bytebufferpool.Put(bb)
+			return false
 		}
+
+		if !manyDataFunc() {
+			continue
+		}
+
+		bytebufferpool.Put(bb)
 	}
 }

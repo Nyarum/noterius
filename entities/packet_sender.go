@@ -10,10 +10,9 @@ import (
 )
 
 type PacketSender struct {
-	Client          net.Conn
-	Network         network.INetwork
-	Logger          *zap.SugaredLogger
-	CloseConnection chan struct{}
+	Client  net.Conn
+	Network network.INetwork
+	Logger  *zap.SugaredLogger
 }
 
 func (state *PacketSender) Receive(context actor.Context) {
@@ -50,6 +49,5 @@ func (state *PacketSender) Receive(context actor.Context) {
 		context.Self().Tell(Logout{})
 	case Logout:
 		state.Client.Close()
-		state.CloseConnection <- struct{}{}
 	}
 }
