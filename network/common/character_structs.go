@@ -9,7 +9,6 @@ type InstAttribute struct {
 
 type Item struct {
 	ID        uint16
-	DBID      uint32
 	Num       uint16
 	Endure    [2]uint16
 	Energy    [2]uint16
@@ -23,18 +22,11 @@ type Item struct {
 }
 
 type CharacterLookSub struct {
-	/*
-				enum ESynLookType
-		{
-			enumSYN_LOOK_SWITCH,	// ������
-			enumSYN_LOOK_CHANGE,	// ��ֵ�ı䡣
-		};
-	*/
 	SynType     uint8
 	TypeID      uint16
 	UnknownFlag uint8
-	Hair        uint16
 	Items       [10]Item
+	Hair        uint16
 }
 
 func (c *CharacterLookSub) Read(pr *barrel.Processor) {
