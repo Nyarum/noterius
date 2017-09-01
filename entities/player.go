@@ -103,9 +103,7 @@ func (state *Player) Receive(context actor.Context) {
 				Name:  character.Name,
 				Job:   character.Job,
 				Level: character.Level,
-				Look: common.CharacterLookSub{
-					Race: character.Race,
-				},
+				Look:  common.CharacterLookSub{},
 			}
 			charSub.SetFlag(character.Enabled)
 
@@ -218,7 +216,6 @@ func (state *Player) Receive(context actor.Context) {
 		characterModel.Name = msg.Name
 		characterModel.Map = mapGet
 		characterModel.Job = "Newbie"
-		characterModel.Race = msg.Look.Race
 		characterModel.Level = 1
 		characterModel.Enabled = true
 

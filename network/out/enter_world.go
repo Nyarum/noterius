@@ -1,6 +1,8 @@
 package out
 
 import (
+	"encoding/binary"
+
 	"github.com/Nyarum/barrel"
 	"github.com/Nyarum/noterius/network/common"
 )
@@ -75,30 +77,8 @@ func (c *EnterWorld) Pack(pr *barrel.Processor) {
 	pr.WriteString1251(c.EntityEvent.EventName)
 
 	// Write look
-	pr.WriteUint16(1626) // Statically size look of character
-	pr.WriteUint8(c.Look.SynType)
-	pr.WriteUint16(c.Look.Race)
-	pr.WriteUint8(c.Look.BoatCheck)
-
-	for _, item := range c.Look.Items {
-		pr.WriteUint16(item.ID)
-		pr.WriteUint16(item.Num)
-		pr.WriteUint16(item.Durability)
-		pr.WriteUint16(item.MaxDurability)
-		pr.WriteUint16(item.Energy)
-		pr.WriteUint16(item.MaxEnergy)
-		pr.WriteUint8(item.ForgeLv)
-		pr.WriteBool(item.Valid)
-		pr.WriteUint32(item.DbParam1)
-		pr.WriteUint32(item.DbParam2)
-		for _, attr := range item.Attrs {
-			pr.WriteUint16(attr.ID)
-			pr.WriteUint16(attr.Value)
-		}
-		pr.WriteBytes(item.Unknown2[:])
-		pr.WriteByte(item.Unknown3)
-	}
-	pr.WriteUint16(c.Look.Hair)
+	pr.WriteUint16(uint16(binary.Size(c.Look))) // Statically size look of character
+	c.Look.Write(pr)
 
 	pr.WriteUint8(c.IsPK)
 
@@ -202,8 +182,8 @@ func (c *EnterWorld) Pack(pr *barrel.Processor) {
 func (c *EnterWorld) SetTestChar() *EnterWorld {
 	shortcut := common.Shortcut{255, 65280}
 	shortcuts := [36]common.Shortcut{shortcut}
-	attrb := common.ItemAttribute{0, 0}
-	attrsb := [5]common.ItemAttribute{attrb, attrb, attrb, attrb, attrb}
+	attrb := common.InstAttribute{0, 0}
+	attrsb := [5]common.InstAttribute{attrb, attrb, attrb, attrb, attrb}
 	bag := common.Bag{0, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, attrsb}
 	bags := []common.Bag{bag, bag, bag, bag}
 	charkitbag := common.CharacterBags{0, 4, bags}
@@ -221,11 +201,11 @@ func (c *EnterWorld) SetTestChar() *EnterWorld {
 	appends := [4]common.CharacterAppendLook{appendt, appendt, appendt, appendt}
 	c.AppendLooks = appends
 	c.IsPK = 0
-	attr := common.ItemAttribute{0, 0}
-	attrs := [5]common.ItemAttribute{attr, attr, attr, attr, attr}
-	item := common.Item{0, 0, 0, 0, 0, 0, 0, true, 0, 0, attrs, [119]byte{}, 0}
+	attr := common.InstAttribute{0, 0}
+	attrs := [5]common.InstAttribute{attr, attr, attr, attr, attr}
+	item := common.Item{0, 0, 0, [2]uint16{}, [2]uint16{}, 0, 0, 0, [2]uint32{}, 0, attrs}
 	items := [10]common.Item{item, item, item, item, item, item, item, item, item, item}
-	charlook := common.CharacterLookSub{0, 2, 0, items, 2291}
+	charlook := common.CharacterLookSub{0, 0, 0, 2291, items}
 	entevent := common.EntityEvent{10263, 1, 0, ""}
 	c.CharSide = 0
 

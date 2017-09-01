@@ -331,6 +331,17 @@ func (p *Processor) ReadArray(value *[]byte, ln int) *Processor {
 }
 
 func (p *Processor) ReadBool(value *bool) *Processor {
+	bufUint8 := make([]byte, 1)
+	if bufUint8 = p.buffer.Next(1); len(bufUint8) < 1 {
+		p.err = errors.New("Not enough bytes in buffer")
+		return p
+	}
+
+	(*value) = false
+	if bufUint8[0] == 1 {
+		(*value) = true
+	}
+
 	return p
 }
 

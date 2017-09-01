@@ -1,12 +1,17 @@
 package out
 
 import (
+	"encoding/binary"
+	"fmt"
+
 	"github.com/Nyarum/barrel"
 	"github.com/Nyarum/noterius/network/common"
 )
 
 type Auth struct {
-	ErrorCode  uint16
+	ErrorCode uint16
+	// ErrorText string (if ErrorCode != 0)
+	LenKey     uint16
 	Key        []byte
 	Characters []common.CharacterSub
 	Pincode    uint8
@@ -29,7 +34,9 @@ func (d *Auth) Pack(pr *barrel.Processor) {
 
 	if d.ErrorCode == 0 {
 		// Static key
-		d.Key = []byte{0x00, 0x08, 0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49}
+		d.Key = []byte{0x7C, 0x35, 0x09, 0x19, 0xB2, 0x50, 0xD3, 0x49}
+
+		pr.WriteUint16(uint16(len(d.Key)))
 		pr.WriteBytes(d.Key)
 
 		pr.WriteUint8(uint8(len(d.Characters)))
@@ -41,31 +48,9 @@ func (d *Auth) Pack(pr *barrel.Processor) {
 				pr.WriteString1251(character.Job)
 				pr.WriteUint16(character.Level)
 
-				pr.WriteUint16(1626) // Statically size look of character
-				pr.WriteUint8(character.Look.SynType)
-				pr.WriteUint16(character.Look.Race)
-				pr.WriteUint8(character.Look.BoatCheck)
-
-				for _, item := range character.Look.Items {
-					pr.WriteUint16(item.ID)
-					pr.WriteUint16(item.Num)
-					pr.WriteUint16(item.Durability)
-					pr.WriteUint16(item.MaxDurability)
-					pr.WriteUint16(item.Energy)
-					pr.WriteUint16(item.MaxEnergy)
-					pr.WriteUint8(item.ForgeLv)
-					pr.WriteBool(item.Valid)
-					pr.WriteUint32(item.DbParam1)
-					pr.WriteUint32(item.DbParam2)
-					for _, attr := range item.Attrs {
-						pr.WriteUint16(attr.ID)
-						pr.WriteUint16(attr.Value)
-					}
-					pr.WriteBytes(item.Unknown2[:])
-					pr.WriteByte(item.Unknown3)
-				}
-
-				pr.WriteUint16(character.Look.Hair)
+				fmt.Println(uint16(binary.Size(character.Look)))
+				pr.WriteUint16(uint16(1626)) // Statically size look of character
+				character.Look.Write(pr)
 			}
 		}
 
@@ -86,7 +71,6 @@ func (d *Auth) SetTestData() *Auth {
 			Job:   "golang-ru.slack.com",
 			Level: 1000,
 		}
-		character.Look.Race = 806
 
 		d.Characters = append(d.Characters, character)
 	}
