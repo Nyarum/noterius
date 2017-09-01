@@ -13,8 +13,6 @@ type Item struct {
 	Endure    [2]uint16
 	Energy    [2]uint16
 	ForgeLv   uint8
-	IsValid   uint8
-	Change    uint8
 	DbParam   [2]uint32
 	InstFlag  uint8
 	InstAttrs [5]InstAttribute
@@ -22,11 +20,10 @@ type Item struct {
 }
 
 type CharacterLookSub struct {
-	SynType     uint8
-	TypeID      uint16
-	UnknownFlag uint8
-	Items       [10]Item
-	Hair        uint16
+	Ver    uint16
+	TypeID uint16
+	Items  [10]Item
+	Hair   uint16
 }
 
 func (c *CharacterLookSub) Read(pr *barrel.Processor) {
