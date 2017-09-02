@@ -3,7 +3,6 @@ package in
 import (
 	"github.com/Nyarum/barrel"
 	"github.com/Nyarum/noterius/network/common"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type CreateCharacter struct {
@@ -22,9 +21,5 @@ func (c *CreateCharacter) Unpack(pr *barrel.Processor) {
 	pr.ReadString1251(&c.Map)
 
 	pr.ReadUint16(&c.LenLook)
-	spew.Dump(pr.Bytes())
-
 	c.Look.Read(pr)
-
-	pr.ReadUint16(&c.Look.Hair)
 }

@@ -49,7 +49,7 @@ func (d *Auth) Pack(pr *barrel.Processor) {
 				pr.WriteUint16(character.Level)
 
 				fmt.Println(uint16(binary.Size(character.Look)))
-				pr.WriteUint16(uint16(1626)) // Statically size look of character
+				pr.WriteUint16(uint16(binary.Size(character.Look))) // Statically size look of character
 				character.Look.Write(pr)
 			}
 		}
@@ -71,6 +71,7 @@ func (d *Auth) SetTestData() *Auth {
 			Job:   "golang-ru.slack.com",
 			Level: 1000,
 		}
+		character.Look.TypeID = 2
 
 		d.Characters = append(d.Characters, character)
 	}

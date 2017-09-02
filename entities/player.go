@@ -105,6 +105,8 @@ func (state *Player) Receive(context actor.Context) {
 				Level: character.Level,
 				Look:  common.CharacterLookSub{},
 			}
+			charSub.Look.TypeID = character.Race
+
 			charSub.SetFlag(character.Enabled)
 
 			authPacket.Characters = append(authPacket.Characters, charSub)
@@ -218,6 +220,7 @@ func (state *Player) Receive(context actor.Context) {
 		characterModel.Job = "Newbie"
 		characterModel.Level = 1
 		characterModel.Enabled = true
+		characterModel.Race = msg.Look.TypeID
 
 		err = characterStore.Insert(characterModel)
 		if err != nil {

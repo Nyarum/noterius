@@ -36,6 +36,7 @@ func (c EnterWorld) Opcode() uint16 {
 }
 
 func (c *EnterWorld) Pack(pr *barrel.Processor) {
+	pr.SetEndian(barrel.LittleEndian)
 	pr.WriteUint16(c.EnterRet)
 	pr.WriteUint8(c.AutoLock)
 	pr.WriteUint8(c.KitbagLock)
@@ -177,6 +178,7 @@ func (c *EnterWorld) Pack(pr *barrel.Processor) {
 
 	pr.WriteUint8(c.BoatNum)
 	pr.WriteUint32(c.CharMainID)
+	pr.SetEndian(barrel.BigEndian)
 }
 
 func (c *EnterWorld) SetTestChar() *EnterWorld {
@@ -203,9 +205,9 @@ func (c *EnterWorld) SetTestChar() *EnterWorld {
 	c.IsPK = 0
 	attr := common.InstAttribute{0, 0}
 	attrs := [5]common.InstAttribute{attr, attr, attr, attr, attr}
-	item := common.Item{0, 0, 0, [2]uint16{}, [2]uint16{}, 0, 0, 0, [2]uint32{}, 0, attrs}
+	item := common.Item{0, 0, [2]uint16{}, [2]uint16{}, 0, 0, [2]uint32{}, attrs, [58]uint16{}, 0, 0, true, true}
 	items := [10]common.Item{item, item, item, item, item, item, item, item, item, item}
-	charlook := common.CharacterLookSub{0, 0, 0, 2291, items}
+	charlook := common.CharacterLookSub{0, 0, items, 2291}
 	entevent := common.EntityEvent{10263, 1, 0, ""}
 	c.CharSide = 0
 
