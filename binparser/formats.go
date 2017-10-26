@@ -1,5 +1,92 @@
 package binparser
 
+const (
+	CharacterNameLength       = 32
+	CharacterIconNameLength   = 17
+	CharacterSkinCount        = 8
+	CharacterItemKindCount    = 20
+	CharacterBirthEffectCount = 3
+	CharacterDeathEffectCount = 3
+	CharacterHPEffectCount    = 3
+	CharacterInitSkillCount   = 11
+	CharacterInitItemCount    = 10
+	CharacterGuildNameLength  = 33
+	CharacterTitleNameLength  = 33
+	CharacterJobNameLength    = 17
+
+	ForgeMaxNumberItems = 6
+
+	HairMaxItem     = 4
+	HairMaxFailItem = 3
+
+	ItemNameLength                = 80
+	ItemIconNameLength            = 17
+	ItemModuleCount               = 5
+	ItemModuleLength              = 19
+	ItemBodyCount                 = 4
+	MaxJobType                    = 19
+	MaxEquipment                  = 10
+	ItemAttributeEffectNameLength = 33
+	ItemBindEffectCount           = 8
+	ItemDescriptionLength         = 257
+
+	RefineEffectCharacterCount = 4
+	RefineEffectCount          = 4
+
+	ItemRefineCount = 14
+
+	ObjectEventNameLength = 18
+
+	ServerInfoMaxGate = 5
+
+	ShipNameLength        = 64
+	ShipDescriptionLength = 128
+	ShipMaxParts          = 16
+
+	ShipMaxMotor = 4
+
+	SkillEffectNameLength         = 17
+	SkillEffectFunctionNameLength = 32
+	SkillEffectActionCount        = 3
+
+	SkillNameLength              = 17
+	SkillJobSelectCount          = 9
+	SkillItemNeedCount           = 8
+	SkillPreSkillCount           = 3
+	SkillRangeFunctionNameLength = 33
+	SkillInfoFunctionNameLength  = 33
+	SkillSelfAttributeCount      = 2
+	SkillSelfEffectCount         = 2
+	SkillTargetEffectCount       = 2
+	SkillExpendItemCount         = 2
+	SkillOperateCount            = 3
+	SkillPoseCount               = 10
+	SkillActionEffectCount       = 3
+	SkillItemEffectCount         = 2
+	SkillIconNameLength          = 17
+	SkillRangeParameterCount     = 4
+
+	StoneEquipMax = 3
+)
+
+type SelectCha int
+
+const (
+	SCNone SelectCha = iota
+	SCAll
+	SCPlayer
+	SCEnemy
+	SCPlayerAshes
+	SCMonster
+	SCMonsterRepairable
+	SCMonsterTree
+	SCMonsterMine
+	SCMonsterFish
+	SCMonsterBoat
+	SCSelf
+	SCTeam
+)
+
 type RawDataInfo struct {
 	Exist       bool
 	Index       int32
@@ -22,19 +109,6 @@ type AreaInfo struct {
 	LightDir   [3]float32
 	Type       int8
 }
-
-const CharacterNameLength = 32
-const CharacterIconNameLength = 17
-const CharacterSkinCount = 8
-const CharacterItemKindCount = 20
-const CharacterBirthEffectCount = 3
-const CharacterDeathEffectCount = 3
-const CharacterHPEffectCount = 3
-const CharacterInitSkillCount = 11
-const CharacterInitItemCount = 10
-const CharacterGuildNameLength = 33
-const CharacterTitleNameLength = 33
-const CharacterJobNameLength = 17
 
 type CharacterInfo struct {
 	Base           RawDataInfo
@@ -190,8 +264,6 @@ type forgeItem struct {
 	Param uint8
 }
 
-const ForgeMaxNumberItems = 6
-
 type ForgeInfo struct {
 	Base      RawDataInfo
 	Level     uint8
@@ -202,9 +274,6 @@ type ForgeInfo struct {
 	ForgeItem [ForgeMaxNumberItems]forgeItem
 }
 
-const HairMaxItem = 4
-const HairMaxFailItem = 3
-
 type HairInfo struct {
 	Base       RawDataInfo
 	Color      [10]int8
@@ -214,17 +283,6 @@ type HairInfo struct {
 	IsChaUse   [4]bool
 	FailNum    int32
 }
-
-const ItemNameLength = 80
-const ItemIconNameLength = 17
-const ItemModuleCount = 5
-const ItemModuleLength = 19
-const ItemBodyCount = 4
-const MaxJobType = 19
-const MaxEquipment = 10
-const ItemAttributeEffectNameLength = 33
-const ItemBindEffectCount = 8
-const ItemDescriptionLength = 257
 
 type ItemInfo struct {
 	Base          RawDataInfo
@@ -313,9 +371,6 @@ type ItemPrefixInfo struct {
 	Base RawDataInfo
 }
 
-const RefineEffectCharacterCount = 4
-const RefineEffectCount = 4
-
 type ItemRefineEffectInfo struct {
 	Base      RawDataInfo
 	LightID   int32
@@ -323,8 +378,6 @@ type ItemRefineEffectInfo struct {
 	Dummy     [RefineEffectCount]int8
 	EffectNum [RefineEffectCharacterCount]int32
 }
-
-const ItemRefineCount = 14
 
 type ItemRefineInfo struct {
 	Base           RawDataInfo
@@ -380,8 +433,6 @@ type NotifyInfo struct {
 	Type int8
 	Info [64]int8
 }
-
-const ObjectEventNameLength = 18
 
 type ObjectEventInfo struct {
 	Base         RawDataInfo
@@ -461,8 +512,6 @@ type SelectCharacterInfo struct {
 	Description [1024]int8
 }
 
-const ServerInfoMaxGate = 5
-
 type ServerInfo struct {
 	Base         RawDataInfo
 	GateIP       [ServerInfoMaxGate][16]int8
@@ -486,10 +535,6 @@ type ShadeInfo struct {
 	ColorA       int32
 	Type         int32
 }
-
-const ShipNameLength = 64
-const ShipDescriptionLength = 128
-const ShipMaxParts = 16
 
 type ShipInfo struct {
 	Base         RawDataInfo
@@ -528,8 +573,6 @@ type ShipInfo struct {
 	Param        uint16
 }
 
-const ShipMaxMotor = 4
-
 type ShipItemInfo struct {
 	Base        RawDataInfo
 	Name        [ShipNameLength]int8
@@ -553,10 +596,6 @@ type ShipItemInfo struct {
 	Speed       uint16
 	Param       uint16
 }
-
-const SkillEffectNameLength = 17
-const SkillEffectFunctionNameLength = 32
-const SkillEffectActionCount = 3
 
 type SkillEffectInfo struct {
 	Base          RawDataInfo
@@ -595,41 +634,6 @@ type SkillEffectInfo struct {
 	ActNum        int32
 }
 
-const SkillNameLength = 17
-const SkillJobSelectCount = 9
-const SkillItemNeedCount = 8
-const SkillPreSkillCount = 3
-const SkillRangeFunctionNameLength = 33
-const SkillEffectFunctionNameLength = 33
-const SkillSelfAttributeCount = 2
-const SkillSelfEffectCount = 2
-const SkillTargetEffectCount = 2
-const SkillExpendItemCount = 2
-const SkillOperateCount = 3
-const SkillPoseCount = 10
-const SkillActionEffectCount = 3
-const SkillItemEffectCount = 2
-const SkillIconNameLength = 17
-const SkillRangeParameterCount = 4
-
-type SelectCha int
-
-const (
-	SCNone SelectCha = iota
-	SCAll
-	SCPlayer
-	SCEnemy
-	SCPlayerAshes
-	SCMonster
-	SCMonsterRepairable
-	SCMonsterTree
-	SCMonsterMine
-	SCMonsterFish
-	SCMonsterBoat
-	SCSelf
-	SCTeam
-)
-
 type skillGrid struct {
 	State      int8
 	Level      int8
@@ -663,15 +667,15 @@ type SkillInfo struct {
 	Radii                    int16
 	Range                    int8
 	Prepare                  [SkillRangeFunctionNameLength]int8
-	UseSP                    [SkillEffectFunctionNameLength]int8
-	UseEndure                [SkillEffectFunctionNameLength]int8
-	UseEnergy                [SkillEffectFunctionNameLength]int8
-	SetRange                 [SkillEffectFunctionNameLength]int8
-	RangeState               [SkillEffectFunctionNameLength]int8
-	Use                      [SkillEffectFunctionNameLength]int8
-	Effect                   [SkillEffectFunctionNameLength]int8
-	Active                   [SkillEffectFunctionNameLength]int8
-	Inactive                 [SkillEffectFunctionNameLength]int8
+	UseSP                    [SkillInfoFunctionNameLength]int8
+	UseEndure                [SkillInfoFunctionNameLength]int8
+	UseEnergy                [SkillInfoFunctionNameLength]int8
+	SetRange                 [SkillInfoFunctionNameLength]int8
+	RangeState               [SkillInfoFunctionNameLength]int8
+	Use                      [SkillInfoFunctionNameLength]int8
+	Effect                   [SkillInfoFunctionNameLength]int8
+	Active                   [SkillInfoFunctionNameLength]int8
+	Inactive                 [SkillInfoFunctionNameLength]int8
 	StateID                  int32
 	SelfAttr                 [SkillSelfAttributeCount]int16
 	SelfEffect               [SkillSelfEffectCount]int16
@@ -684,7 +688,7 @@ type SkillInfo struct {
 	Variation                int16
 	Summon                   int16
 	PreTime                  int16
-	FireSpeed                [SkillEffectFunctionNameLength]int8
+	FireSpeed                [SkillInfoFunctionNameLength]int8
 	Operate                  [SkillOperateCount]int8
 	ActionHarm               int16
 	ActionPlayType           int8
@@ -719,8 +723,6 @@ type SkillInfo struct {
 	SelectCha                SelectCha
 	PoseNum                  int32
 }
-
-const StoneEquipMax = 3
 
 type StoneInfo struct {
 	Base         RawDataInfo
